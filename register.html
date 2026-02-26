@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4e73df, #1cc88a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 320px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .login-btn {
+            width: 107%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #4e73df;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #2e59d9;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Регистрация</h2>
+
+        <div class="input-group">
+            <input type="login" id="login" placeholder="Логин">
+        </div>
+
+        <div class="input-group">
+            <input type="email" id="email" placeholder="Почта">
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Пароль">
+        </div>
+
+        <div class="input-group">
+            <input type="password_again" placeholder="Повторите пароль">
+        </div>
+
+        <button class="login-btn" onclick="to_register()">Зарегестрироваться</button>
+
+    </div>
+</body>
+</html>
