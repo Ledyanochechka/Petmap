@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Профиль</title>
+
+    <style>
+        :root {
+            --bg1: #4e73df;
+            --bg2: #1cc88a;
+            --panel: #ffffff;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            --radius: 12px;
+            --gap: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 26px;
+            color: var(--text);
+        }
+
+        .box {
+            background: var(--panel);
+            padding: 22px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: min(980px, 96vw);
+        }
+
+        .top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.10);
+            font-size: 26px;
+            flex: 0 0 auto;
+        }
+
+        .user-info {
+            min-width: 0;
+        }
+
+        .username {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex: 0 0 auto;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text);
+            background: #f3f4f6;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            background: #ffffff;
+        }
+
+        .btn-primary {
+            background: #4e73df;
+            color: #fff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #2e59d9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap);
+            margin-top: 18px;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fff;
+        }
+
+        .panel-title {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pet-card {
+            display: flex;
+            gap: 12px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fafafa;
+        }
+
+        .pet-photo {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 25% 30%, rgba(78, 115, 223, 0.20), transparent 55%),
+            radial-gradient(circle at 70% 60%, rgba(28, 200, 138, 0.18), transparent 55%),
+            #fff;
+            flex: 0 0 auto;
+            font-size: 22px;
+        }
+
+        .pet-info {
+            min-width: 0;
+        }
+
+        .pet-name {
+            margin: 0;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .pet-meta {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.25;
+        }
+
+        .place-card {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fafafa;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .place-left {
+            min-width: 0;
+        }
+
+        .place-name {
+            margin: 0;
+            font-weight: 800;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .place-meta {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.25;
+        }
+
+        .place-desc {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.25;
+        }
+
+        .badge {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: #fff;
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .mini-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .mini-link {
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4e73df;
+        }
+
+        .mini-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 860px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+
+    <div class="top">
+        <div class="user">
+            <div class="avatar" title="Иконка профиля">👤</div>
+            <div class="user-info">
+                <p class="username">Имя Пользователя</p>
+                <p class="status">Город: неизвестно</p>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a class="btn btn-primary" href="file:///C:/Users/Mr.%20Glaz/PycharmProjects/WebProject/map.html">На
+                карту</a>
+            <a class="btn" href="settings.html">Настройки</a>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <div class="panel">
+            <div class="panel-title">Питомцы</div>
+
+            <div class="list">
+                <div class="pet-card">
+                    <div class="pet-photo" title="Фото питомца">🐾</div>
+                    <div class="pet-info">
+                        <p class="pet-name">Кусь</p>
+                        <p class="pet-meta">Порода: немецкий шпиц<br>Возраст: 3 года</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mini-actions">
+                <a class="mini-link" href="new_pet.html">Добавить питомца</a>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Избранные места</div>
+
+            <div class="list">
+                <div class="place-card">
+                    <div class="place-left">
+                        <p class="place-name">Дом</p>
+                        <p class="place-meta">Ул. - Неизвестно</p>
+                        <p class="place-meta">Район - Неизвестно</p>
+                    </div>
+                    <div class="badge">⭐ Избранное</div>
+                </div>
+            </div>
+
+            <div class="mini-actions">
+                <a class="mini-link" href="map.html">Показать на карте</a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</div>
+</body>
+</html>

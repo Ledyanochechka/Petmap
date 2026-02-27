@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Карта</title>
+
+  <style>
+    :root{
+      --bg1:#4e73df;
+      --bg2:#1cc88a;
+      --panel:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(0,0,0,0.18);
+      --radius:14px;
+      --gap:18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 26px;
+    }
+
+    .app{
+      width: min(1200px, 96vw);
+      height: min(720px, 92vh);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: calc(var(--radius) + 6px);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      position: relative;
+      backdrop-filter: blur(6px);
+    }
+
+    .topbar{
+      position:absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      height: 54px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      pointer-events:none;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(255,255,255,0.9);
+      padding: 10px 12px;
+      border-radius: 999px;
+      pointer-events:auto;
+    }
+
+    .brand-badge{
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--bg1), var(--bg2));
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+    }
+
+    .brand-title{
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1;
+    }
+    .brand-sub{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .profile-link{
+      pointer-events:auto;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(255,255,255,0.9);
+      padding: 10px 12px;
+      border-radius: 999px;
+      color: var(--text);
+      transition: 0.2s;
+    }
+
+    .profile-link:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.88);
+    }
+
+    .avatar{
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+      font-size: 16px;
+    }
+
+    .profile-text{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .profile-text span:first-child{
+      font-weight:700;
+      font-size:13px;
+    }
+    .profile-text span:last-child{
+      font-size:12px;
+      color: var(--muted);
+    }
+
+    .content{
+      height: 100%;
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: var(--gap);
+      padding-top: 64px;
+    }
+
+    .panel{
+      background: var(--panel);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+      overflow:hidden;
+    }
+
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .sidebar-header{
+      padding: 16px 16px 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h2{
+      margin:0;
+      font-size: 16px;
+    }
+
+    .sidebar-header p{
+      margin:6px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .sidebar-body{
+      padding: 14px 16px 16px 16px;
+      overflow:auto;
+    }
+
+    .section{
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #e6e6e6;
+    }
+
+    .section:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+      margin-bottom:0;
+    }
+
+    .section-title{
+      font-weight:700;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .chip-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .chip{
+      border: 1px solid var(--border);
+      background: #f9fafb;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      cursor: default;
+      user-select:none;
+    }
+
+    .chip .dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+    }
+
+    .control{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background:#fff;
+      margin-top: 8px;
+    }
+
+    .control span{
+      font-size: 13px;
+    }
+
+    .toggle{
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      position:relative;
+      border: 1px solid #d1d5db;
+      flex: 0 0 auto;
+    }
+    .toggle::after{
+      content:"";
+      position:absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background:#fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .btn{
+      width:100%;
+      display:block;
+      border:none;
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align:center;
+      text-decoration:none;
+      transition: 0.2s;
+    }
+
+    .btn-primary{
+      background: #4e73df;
+      color:#fff;
+    }
+
+    .btn-secondary{
+      background: #f3f4f6;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn + .btn{ margin-top: 10px; }
+
+    .map{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .map-header{
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+
+    .map-header h2{
+      margin:0;
+      font-size: 16px;
+    }
+
+    .map-header .hint{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .map-canvas{
+      flex:1;
+      min-height:0;
+      margin: 14px;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(circle at 25% 30%, rgba(78,115,223,0.20), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(28,200,138,0.18), transparent 45%),
+        linear-gradient(0deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02));
+      position:relative;
+      overflow:hidden;
+    }
+
+    .map-canvas::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image:
+        linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.55;
+      pointer-events:none;
+    }
+
+    .pin{
+      position:absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #4e73df;
+      box-shadow: 0 10px 16px rgba(0,0,0,0.18);
+      border: 2px solid #fff;
+    }
+    .pin.one{ left: 22%; top: 38%; }
+    .pin.two{ left: 58%; top: 52%; background:#1cc88a; }
+    .pin.three{ left: 74%; top: 28%; background:#111827; }
+
+    .legend{
+      position:absolute;
+      left: 14px;
+      bottom: 14px;
+      background: rgba(255,255,255,0.82);
+      border: 1px solid rgba(255,255,255,0.9);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 320px;
+    }
+
+    @media (max-width: 880px){
+      .content{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .app{
+        height: auto;
+        min-height: 92vh;
+      }
+      .map-canvas{
+        height: 52vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge"></div>
+        <div>
+          <div class="brand-title">Карта Москвы</div>
+        </div>
+      </div>
+
+      <a class="profile-link" href="profile.html" title="Перейти в профиль">
+        <div class="avatar">👤</div>
+        <div class="profile-text">
+          <span>Профиль</span>
+          <span>настройки игрока</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="content">
+
+      <aside class="panel sidebar">
+        <div class="sidebar-header">
+          <h2>Настройки карты</h2>
+        </div>
+
+        <div class="sidebar-body">
+
+          <div class="section">
+            <a class="btn btn-primary" href="#" aria-disabled="true">Добавить метку</a>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Фильтры</div>
+
+            <div class="control">
+              <span>Избранные метки</span>
+              <div class="toggle" aria-hidden="true"></div>
+            </div>
+
+            <div class="control">
+              <span>Точки интереса</span>
+              <div class="toggle" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Тип карты</div>
+            <div class="chip-row">
+              <div class="chip"><span class="dot"></span>Обычная</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Избранное</div>
+            <div class="chip-row">
+              <div class="chip"><span class="dot"></span>Дом</div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <main class="panel map">
+        <div class="map-header">
+          <div>
+            <h2>Карта</h2>
+            <div class="hint">Плейсхолдер. Тут позже появится настоящая карта.</div>
+          </div>
+          <div class="hint">Масштаб: 100%</div>
+        </div>
+
+        <div class="map-canvas" role="img" aria-label="Плейсхолдер карты">
+          <div class="pin one" title="Метка"></div>
+          <div class="pin two" title="Метка"></div>
+          <div class="pin three" title="Метка"></div>
+
+          <div class="legend">
+            Подсказка: здесь будут реальные слои карты, точки, избранное и т.п.
+            Пока это сетка + декоративные метки.
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новый питомец</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4e73df, #1cc88a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 320px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 55%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #4e73df;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-row .btn {
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #333;
+        }
+
+        .link-btn {
+            background: #4e73df;
+            color: white;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .link-btn:hover {
+            background: #2e59d9;
+        }
+
+        .upload-container {
+        text-align: center;
+        }
+
+        .upload-area {
+            width: 300px;
+            height: 300px;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #4e73df;
+            background: #f9fbff;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .upload-area input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Новый питомец</h2>
+
+        <label class="upload-area">
+            <input type="file" accept="image/*">
+            <p>Перетащите фото сюда<br>или нажмите для выбора</p>
+        </label>
+
+        <div class="input-group">
+            <input type="pet name" id="pet name" placeholder="Имя питомца">
+        </div>
+
+        <div class="input-group">
+            <input type="pet type" id="pet type" placeholder="Порода питомца">
+        </div>
+
+        <div class="input-group">
+            <input type="pet age" id="pet age" placeholder="Возраст питомца">
+        </div>
+
+        <div class="btn-row">
+            <button class="btn">Сохранить питомца</button>
+            <a href="file:///C:/Users/Mr.%20Glaz/PycharmProjects/WebProject/map.html" class="btn btn-secondary link-btn">Назад</a>
+        </div>
+    </div>
+</body>
+</html>
