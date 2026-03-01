@@ -1,69 +1,103 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Настройки аккаунта</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<title>Настройки аккаунта</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
 
-        .page {
-            width: 100%;
-            height: 100vh;
-            border: 3px solid #000;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+.page {
+    width: 100%;
+    height: 100vh;
+    border: 3px solid #000;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-        .content-box {
-            flex: 1;
-            width: 100%;
-            border: 2px dashed #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 24px;
-            padding: 20px;
-        }
+.content-box {
+    flex: 1;
+    width: 100%;
+    border: 2px dashed #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 15px;
+    padding: 40px;
+    max-width: 600px;
+    margin: 0 auto;
+}
 
-        .buttons {
-            display: flex;
-            gap: 20px;
-        }
+.title {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 10px;
+}
 
-        .buttons button {
-            padding: 12px 26px;
-            font-size: 16px;
-            border: 2px solid #000;
-            background: #fff;
-            cursor: pointer;
-        }
+.input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #000;
+}
 
-        .buttons button:hover {
-            background: #f2f2f2;
-        }
-    </style>
+.save-btn {
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #000;
+    background: #fff;
+    cursor: pointer;
+}
+
+.save-btn:hover {
+    background: #f2f2f2;
+}
+
+.buttons {
+    display: flex;
+    gap: 20px;
+}
+
+.buttons button {
+    padding: 12px 26px;
+    font-size: 16px;
+    border: 2px solid #000;
+    background: #fff;
+    cursor: pointer;
+}
+
+.buttons button:hover {
+    background: #f2f2f2;
+}
+</style>
 </head>
 <body>
 
 <div class="page">
-    <div class="content-box">
-        Поля для отображения и смены имени, почты, пароля и т.п.
-    </div>
+
+    <form class="content-box">
+        <div class="title">Данные аккаунта</div>
+
+        <input class="input" type="text">
+        <input class="input" type="email">
+
+        <button class="save-btn" type="submit">Сохранить изменения</button>
+    </form>
 
     <div class="buttons">
         <button>Выйти</button>
         <button>Удалить аккаунт</button>
     </div>
+
 </div>
 
 </body>
