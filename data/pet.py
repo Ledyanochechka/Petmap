@@ -1,0 +1,16 @@
+import sqlalchemy
+from sqlalchemy import orm
+
+from .db_session import SqlAlchemyBase
+
+
+class Pet(SqlAlchemyBase):
+    __tablename__ = 'pet'
+
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           primary_key=True, autoincrement=True)
+    pet_person = orm.relationship("PetPerson", back_populates='pet')
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    type_id = sqlalchemy.Column(sqlalchemy.Integer,
+                             sqlalchemy.ForeignKey("pet_type.id"))
+    type = orm.relationship('PetType')
