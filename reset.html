@@ -4,83 +4,123 @@
     <meta charset="UTF-8">
     <title>Сброс пароля</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
-        * {
-            box-sizing: border-box;
+        :root{
+            --bg1:#4e73df;
+            --bg2:#1cc88a;
+            --panel:#ffffff;
+            --text:#1f2937;
+            --border:#e5e7eb;
+            --shadow:0 10px 30px rgba(0,0,0,0.2);
+            --radius:12px;
         }
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            padding: 20px;
+        *{
+            box-sizing:border-box;
         }
 
-        .outer-box {
-            border: 3px solid #000;
-            padding: 20px;
-            width: 100%;
-            max-width: 420px;
+        body{
+            margin:0;
+            font-family:Arial, sans-serif;
+            background:linear-gradient(135deg,var(--bg1),var(--bg2));
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:20px;
         }
 
-        .inner-box {
-            border: 2px dashed #000;
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
+        .box{
+            background:var(--panel);
+            padding:35px;
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            width:min(420px,95vw);
         }
 
-        .title {
-            font-size: 22px;
-            margin-bottom: 10px;
+        .title{
+            text-align:center;
+            font-size:22px;
+            font-weight:700;
+            margin-bottom:20px;
         }
 
-        .input {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border: 2px solid #000;
+        .form{
+            display:flex;
+            flex-direction:column;
+            gap:15px;
         }
 
-        .button {
-            padding: 12px;
-            font-size: 16px;
-            border: 2px solid #000;
-            background: #fff;
-            cursor: pointer;
+        .input{
+            width:100%;
+            padding:12px;
+            font-size:15px;
+            border:1px solid var(--border);
+            border-radius:10px;
+            outline:none;
+            transition:0.2s;
         }
 
-        .button:hover {
-            background: #f2f2f2;
+        .input:focus{
+            border-color:#4e73df;
+            box-shadow:0 0 0 3px rgba(78,115,223,0.15);
         }
 
-        @media (max-width: 480px) {
-            .title {
-                font-size: 20px;
-            }
+        .button{
+            margin-top:5px;
+            padding:12px;
+            font-size:15px;
+            font-weight:700;
+            border:none;
+            border-radius:10px;
+            background:#4e73df;
+            color:white;
+            cursor:pointer;
+            transition:0.2s;
+        }
 
-            .inner-box {
-                padding: 20px 15px;
+        .button:hover{
+            background:#2e59d9;
+        }
+
+        .back{
+            display:block;
+            text-align:center;
+            margin-top:18px;
+            font-size:14px;
+            text-decoration:none;
+            color:#4e73df;
+            font-weight:700;
+        }
+
+        .back:hover{
+            text-decoration:underline;
+        }
+
+        @media (max-width:480px){
+            .box{
+                padding:25px;
             }
         }
     </style>
 </head>
+
 <body>
 
-<div class="outer-box">
-    <form class="inner-box">
-        <div class="title">Сброс пароля</div>
+<div class="box">
 
+    <div class="title">Сброс пароля</div>
+
+    <form class="form">
         <input class="input" type="password" placeholder="Новый пароль" required>
         <input class="input" type="password" placeholder="Повторите пароль" required>
 
         <button class="button" type="submit">Сбросить пароль</button>
     </form>
+
+    <a class="back" href="login.html">Вернуться ко входу</a>
+
 </div>
 
 </body>
