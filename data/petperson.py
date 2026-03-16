@@ -10,8 +10,9 @@ class PetPerson(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     id_animal = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey("pet.id"))
-    animal = orm.relationship('Pet')
+                                  sqlalchemy.ForeignKey("pet.id"))
+    pet = orm.relationship('Pet', back_populates='pet_person')
+
     id_person = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey("person.id"))
-    person = orm.relationship('Person')
+                                  sqlalchemy.ForeignKey("person.id"))
+    person = orm.relationship('Person', back_populates='pet_person')

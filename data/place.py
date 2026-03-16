@@ -14,4 +14,4 @@ class Place(SqlAlchemyBase):
     coordinates = sqlalchemy.Column(sqlalchemy.Numeric, nullable=True)
     type = sqlalchemy.Column(sqlalchemy.Integer,
                              sqlalchemy.ForeignKey("place_name.id"))
-    person = orm.relationship('PlaceName')
+    place_name = orm.relationship('PlaceName')

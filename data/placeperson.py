@@ -10,8 +10,9 @@ class PlacePerson(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)
     id_place = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey("place.id"))
-    place = orm.relationship('Place')
+                                 sqlalchemy.ForeignKey("place.id"))
+    place = orm.relationship('Place', back_populates='place_person')
+
     id_person = sqlalchemy.Column(sqlalchemy.Integer,
-                           sqlalchemy.ForeignKey("person.id"))
-    person = orm.relationship('Person')
+                                  sqlalchemy.ForeignKey("person.id"))
+    person = orm.relationship('Person', back_populates='place_person')
