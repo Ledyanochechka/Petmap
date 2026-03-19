@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, redirect, request
 from data import db_session
 from forms.register_form import RegisterForm
 from data.person import Person
@@ -51,8 +51,27 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
 
+        db_sess = db_session.create_session()
+
+        person = db_sess.query(Person).filter(Person.email == email).first()
+
+        if not person:
+            return render_template("login.html", message="Пользователь не найден")
+
+        if not person.check_password(password):
+            return render_template("login.html", message="Неверный пароль")
+
+        return redirect('/map')
+
+    return render_template("login.html")
+
+@app.route('/map')
+def map():
+    return render_template('map.html')
 
 if __name__ == '__main__':
     main()
