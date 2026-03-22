@@ -17,10 +17,10 @@ class Person(SqlAlchemyBase):
     city = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     email = sqlalchemy.Column(sqlalchemy.String,
                               index=True, unique=True, nullable=False)
-    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    Password = sqlalchemy.Column(sqlalchemy.String, nullable=False)
 
     def set_password(self, password):
-        self.hashed_password = generate_password_hash(password)
+        self.Password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.hashed_password, password)
+        return check_password_hash(self.Password, password)
