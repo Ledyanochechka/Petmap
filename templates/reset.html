@@ -112,14 +112,24 @@
 
     <div class="title">Сброс пароля</div>
 
-    <form class="form">
-        <input class="input" type="password" placeholder="Новый пароль" required>
-        <input class="input" type="password" placeholder="Повторите пароль" required>
+    <form class="form" method="post">
+        <input class="input" type="email" name="email" placeholder="Введите email" required>
+
+        <input class="input" type="password" name="new_password" placeholder="Новый пароль" required>
+
+        <input class="input" type="password" name="new_password_again" placeholder="Повторите пароль" required>
 
         <button class="button" type="submit">Сбросить пароль</button>
+
     </form>
 
-    <a class="back" href="login.html">Вернуться ко входу</a>
+    {% if message %}
+        <div style="text-align:center; margin-top:10px; color:green;">
+            {{ message }}
+        </div>
+    {% endif %}
+
+    <a class="back" href="/login">Вернуться ко входу</a>
 
 </div>
 

@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect, request
-from data import db_session
+from d import db_session
+from forms.reset_passw import ResetForm
 from forms.register_form import RegisterForm
-from data.person import Person
+from d.person import Person
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Bogdan_Lox'
@@ -69,9 +70,57 @@ def login():
 
     return render_template("login.html")
 
+@app.route('/reset', methods=['GET', 'POST'])
+def reset():
+    if request.method == 'POST':
+        email = request.form['email']
+        new_password = request.form['new_password']
+        new_password_again = request.form['new_password_again']
+
+        if new_password != new_password_again:
+            return render_template('reset.html', message="Пароли не совпадают")
+
+        db_sess = db_session.create_session()
+        person = db_sess.query(Person).filter(Person.email == email).first()
+
+        if not person:
+            return render_template('reset.html', message="Пользователь не найден")
+
+        person.set_password(new_password)
+        db_sess.commit()
+
+        return render_template('reset.html', message="Пароль успешно изменён")
+
+    return render_template('reset.html')
+
 @app.route('/map')
 def map():
     return render_template('map.html')
+
+@app.route('/profile')
+def profile():
+    return render_template('profile.html')
+
+
+@app.route('/new_pet')
+def new_pet():
+    return render_template('new_pet.html')
+
+
+@app.route('/edit_pet')
+def edit_pet():
+    return render_template('edit_pet.html')
+
+@app.route('/')
+def index():
+    return redirect('/login')
+
+
+@app.route('/edit_prof')
+def edit_prof():
+    return render_template('edit_prof.html')
+
+
 
 if __name__ == '__main__':
     main()
