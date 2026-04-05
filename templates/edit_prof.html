@@ -34,6 +34,7 @@
     }
 
     .page {
+        position: relative;
         width: min(700px, 96vw);
         background: var(--panel);
         border-radius: var(--radius);
@@ -41,11 +42,35 @@
         padding: 30px;
     }
 
+    .top-right-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 10px;
+        background: #f3f4f6;
+        color: var(--text);
+        border: 1px solid var(--border);
+        transition: 0.2s;
+    }
+
+    .top-right-btn:hover {
+        background: #ffffff;
+        transform: translateY(-1px);
+    }
+
     .title {
         text-align: center;
         font-size: 24px;
         font-weight: 700;
         margin-bottom: 24px;
+        padding-top: 18px;
     }
 
     .content-box {
@@ -88,13 +113,11 @@
     }
 
     .buttons {
-        display: flex;
-        gap: 12px;
         margin-top: 22px;
     }
 
     .btn {
-        flex: 1;
+        width: 100%;
         display: inline-flex;
         justify-content: center;
         align-items: center;
@@ -117,22 +140,13 @@
         background: #ffffff;
         transform: translateY(-1px);
     }
-
-    .btn-danger {
-        background: #fee2e2;
-        color: #b91c1c;
-        border: 1px solid #fecaca;
-    }
-
-    .btn-danger:hover {
-        background: #fecaca;
-        transform: translateY(-1px);
-    }
 </style>
 </head>
 <body>
 
 <div class="page">
+    <a href="/profile" class="top-right-btn">Профиль</a>
+
     <div class="title">Данные аккаунта</div>
 
     <form class="content-box">
@@ -144,7 +158,6 @@
 
     <div class="buttons">
         <a href="/login" class="btn btn-secondary">Выйти</a>
-        <a href="#" class="btn btn-danger">Удалить аккаунт</a>
     </div>
 </div>
 
