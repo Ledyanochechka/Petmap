@@ -1,468 +1,530 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Карта</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Карта</title>
 
-  <style>
-    :root{
-      --bg1:#4e73df;
-      --bg2:#1cc88a;
-      --panel:#ffffff;
-      --text:#1f2937;
-      --muted:#6b7280;
-      --border:#e5e7eb;
-      --shadow:0 10px 30px rgba(0,0,0,0.18);
-      --radius:14px;
-      --gap:18px;
-    }
+    <style>
+        :root{
+          --bg1:#4e73df;
+          --bg2:#1cc88a;
+          --panel:#ffffff;
+          --text:#1f2937;
+          --muted:#6b7280;
+          --border:#e5e7eb;
+          --shadow:0 10px 30px rgba(0,0,0,0.18);
+          --radius:14px;
+          --gap:10px;
+        }
 
-    * { box-sizing: border-box; }
+        * { box-sizing: border-box; }
 
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      color: var(--text);
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      padding: 26px;
-    }
+        body{
+          margin:0;
+          font-family: Arial, sans-serif;
+          color: var(--text);
+          background: linear-gradient(135deg, var(--bg1), var(--bg2));
+          min-height:100vh;
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          padding: 26px;
+        }
 
-    .app{
-      width: min(1200px, 96vw);
-      height: min(720px, 92vh);
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: calc(var(--radius) + 6px);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      position: relative;
-      backdrop-filter: blur(6px);
-    }
+        .app{
+          width: min(1400px, 96vw);
+          height: min(720px, 92vh);
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.18);
+          border-radius: calc(var(--radius) + 6px);
+          box-shadow: var(--shadow);
+          padding: 14px;
+          position: relative;
+          backdrop-filter: blur(6px);
+        }
 
-    .topbar{
-      position:absolute;
-      top: 14px;
-      left: 14px;
-      right: 14px;
-      height: 54px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      pointer-events:none;
-    }
+        .topbar{
+          position:absolute;
+          top: 14px;
+          left: 14px;
+          right: 14px;
+          height: 40px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          pointer-events:none;
+          z-index: 10;
+        }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      background: rgba(255,255,255,0.72);
-      border: 1px solid rgba(255,255,255,0.9);
-      padding: 10px 12px;
-      border-radius: 999px;
-      pointer-events:auto;
-    }
+        .brand{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(255,255,255,0.9);
+          padding: 6px 10px;
+          border-radius: 999px;
+          pointer-events:auto;
+        }
 
-    .brand-badge{
-      width: 28px;
-      height: 28px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, var(--bg1), var(--bg2));
-      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
-    }
+        .brand-badge{
+          width: 28px;
+          height: 28px;
+          border-radius: 9px;
+          background: linear-gradient(135deg, var(--bg1), var(--bg2));
+          box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }
 
-    .brand-title{
-      font-weight: 700;
-      font-size: 14px;
-      line-height: 1;
-    }
-    .brand-sub{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+        .brand-title{
+          font-weight: 700;
+          font-size: 14px;
+          line-height: 1;
+        }
 
-    .profile-link{
-      pointer-events:auto;
-      text-decoration:none;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      background: rgba(255,255,255,0.72);
-      border: 1px solid rgba(255,255,255,0.9);
-      padding: 10px 12px;
-      border-radius: 999px;
-      color: var(--text);
-      transition: 0.2s;
-    }
+        .profile-link{
+          pointer-events:auto;
+          text-decoration:none;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          background: rgba(255,255,255,0.72);
+          border: 1px solid rgba(255,255,255,0.9);
+          padding: 6px 10px;
+          border-radius: 999px;
+          color: var(--text);
+          transition: 0.2s;
+        }
 
-    .profile-link:hover{
-      transform: translateY(-1px);
-      background: rgba(255,255,255,0.88);
-    }
+        .profile-link:hover{
+          transform: translateY(-1px);
+          background: rgba(255,255,255,0.88);
+        }
 
-    .avatar{
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      background: #fff;
-      border: 1px solid var(--border);
-      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
-      font-size: 16px;
-    }
+        .avatar{
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          background: #fff;
+          border: 1px solid var(--border);
+          box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+          font-size: 16px;
+        }
 
-    .profile-text{
-      display:flex;
-      flex-direction:column;
-      line-height:1.05;
-    }
-    .profile-text span:first-child{
-      font-weight:700;
-      font-size:13px;
-    }
-    .profile-text span:last-child{
-      font-size:12px;
-      color: var(--muted);
-    }
+        .profile-text{
+          display:flex;
+          flex-direction:column;
+          line-height:1.05;
+        }
 
-    .content{
-      height: 100%;
-      display:grid;
-      grid-template-columns: 320px 1fr;
-      gap: var(--gap);
-      padding-top: 64px;
-    }
+        .profile-text span:first-child{
+          font-weight:700;
+          font-size:13px;
+        }
 
-    .panel{
-      background: var(--panel);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.10);
-      overflow:hidden;
-    }
+        .profile-text span:last-child{
+          font-size:12px;
+          color: var(--muted);
+        }
 
-    .sidebar{
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
+        .content{
+          height: 100%;
+          display:grid;
+          grid-template-columns: 280px 1fr;
+          gap: var(--gap);
+          padding-top: 50px;
+        }
 
-    .sidebar-header{
-      padding: 16px 16px 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
+        .panel{
+          background: var(--panel);
+          border-radius: var(--radius);
+          border: 1px solid var(--border);
+          box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+          overflow:hidden;
+        }
 
-    .sidebar-header h2{
-      margin:0;
-      font-size: 16px;
-    }
+        .sidebar{
+          display:flex;
+          flex-direction:column;
+          min-height:0;
+        }
 
-    .sidebar-header p{
-      margin:6px 0 0 0;
-      font-size: 12px;
-      color: var(--muted);
-    }
+        .sidebar-header{
+          padding: 16px 16px 12px 16px;
+          border-bottom: 1px solid var(--border);
+        }
 
-    .sidebar-body{
-      padding: 14px 16px 16px 16px;
-      overflow:auto;
-    }
+        .sidebar-header h2{
+          margin:0;
+          font-size: 16px;
+        }
 
-    .section{
-      margin-bottom: 14px;
-      padding-bottom: 14px;
-      border-bottom: 1px dashed #e6e6e6;
-    }
+        .sidebar-body{
+          padding: 14px 16px 16px 16px;
+          overflow:auto;
+        }
 
-    .section:last-child{
-      border-bottom:none;
-      padding-bottom:0;
-      margin-bottom:0;
-    }
+        .section{
+          margin-bottom: 14px;
+          padding-bottom: 14px;
+          border-bottom: 1px dashed #e6e6e6;
+        }
 
-    .section-title{
-      font-weight:700;
-      font-size: 13px;
-      margin-bottom: 10px;
-    }
+        .section:last-child{
+          border-bottom:none;
+          padding-bottom:0;
+          margin-bottom:0;
+        }
 
-    .chip-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
+        .section-title{
+          font-weight:700;
+          font-size: 13px;
+          margin-bottom: 10px;
+        }
 
-    .chip{
-      border: 1px solid var(--border);
-      background: #f9fafb;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      color: var(--text);
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      cursor: default;
-      user-select:none;
-    }
+        .control{
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 10px 12px;
+          background:#fff;
+          margin-top: 8px;
+        }
 
-    .chip .dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #9ca3af;
-    }
+        .control span{
+          font-size: 13px;
+        }
 
-    .control{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background:#fff;
-      margin-top: 8px;
-    }
+        .toggle{
+          width: 44px;
+          height: 24px;
+          border-radius: 999px;
+          background: #e5e7eb;
+          position:relative;
+          border: 1px solid #d1d5db;
+          flex: 0 0 auto;
+        }
 
-    .control span{
-      font-size: 13px;
-    }
+        .toggle::after{
+          content:"";
+          position:absolute;
+          top: 2px;
+          left: 2px;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          background:#fff;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
 
-    .toggle{
-      width: 44px;
-      height: 24px;
-      border-radius: 999px;
-      background: #e5e7eb;
-      position:relative;
-      border: 1px solid #d1d5db;
-      flex: 0 0 auto;
-    }
-    .toggle::after{
-      content:"";
-      position:absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background:#fff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
+        .btn{
+          width:100%;
+          display:block;
+          border:none;
+          border-radius: 10px;
+          padding: 11px 12px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          text-align:center;
+          text-decoration:none;
+          transition: 0.2s;
+        }
 
-    .btn{
-      width:100%;
-      display:block;
-      border:none;
-      border-radius: 10px;
-      padding: 11px 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align:center;
-      text-decoration:none;
-      transition: 0.2s;
-    }
+        .btn-primary{
+          background: #4e73df;
+          color:#fff;
+        }
 
-    .btn-primary{
-      background: #4e73df;
-      color:#fff;
-    }
+        .btn-secondary{
+          background: #f3f4f6;
+          color: var(--text);
+          border: 1px solid var(--border);
+          margin-top: 10px;
+        }
 
-    .btn-secondary{
-      background: #f3f4f6;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
+        .map{
+          position:relative;
+          display:flex;
+          flex-direction:column;
+          min-height:0;
+        }
 
-    .btn + .btn{ margin-top: 10px; }
+        .map-header{
+          padding: 12px;
+          border-bottom: 1px solid var(--border);
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
 
-    .map{
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      min-height:0;
-    }
+        .map-header h2{
+          margin:0;
+          font-size: 16px;
+        }
 
-    .map-header{
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-    }
+        .map-header .hint{
+          font-size: 12px;
+          color: var(--muted);
+        }
 
-    .map-header h2{
-      margin:0;
-      font-size: 16px;
-    }
+        .search-row{
+          display:flex;
+          gap:10px;
+          width:100%;
+          margin-top:4px;
+        }
 
-    .map-header .hint{
-      font-size: 12px;
-      color: var(--muted);
-    }
+        .search-input{
+          flex:1;
+          padding:10px 12px;
+          border:1px solid var(--border);
+          border-radius:10px;
+          font-size:14px;
+        }
 
-    .map-canvas{
-      flex:1;
-      min-height:0;
-      margin: 14px;
-      border-radius: calc(var(--radius) - 2px);
-      border: 1px solid var(--border);
-      background:
-        radial-gradient(circle at 25% 30%, rgba(78,115,223,0.20), transparent 45%),
-        radial-gradient(circle at 70% 60%, rgba(28,200,138,0.18), transparent 45%),
-        linear-gradient(0deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02));
-      position:relative;
-      overflow:hidden;
-    }
+        .search-btn{
+          padding:10px 14px;
+          border:none;
+          border-radius:10px;
+          background:#4e73df;
+          color:#fff;
+          cursor:pointer;
+          font-weight:700;
+        }
 
-    .map-canvas::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background-image:
-        linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px);
-      background-size: 42px 42px;
-      opacity: 0.55;
-      pointer-events:none;
-    }
+        .map-stage{
+          position: relative;
+          flex:1;
+          min-height:0;
+          margin: 7px;
+          border-radius: calc(var(--radius) - 2px);
+          overflow:hidden;
+        }
 
-    .pin{
-      position:absolute;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #4e73df;
-      box-shadow: 0 10px 16px rgba(0,0,0,0.18);
-      border: 2px solid #fff;
-    }
-    .pin.one{ left: 22%; top: 38%; }
-    .pin.two{ left: 58%; top: 52%; background:#1cc88a; }
-    .pin.three{ left: 74%; top: 28%; background:#111827; }
+        #map{
+          width: 100%;
+          height: 100%;
+        }
 
-    .legend{
-      position:absolute;
-      left: 14px;
-      bottom: 14px;
-      background: rgba(255,255,255,0.82);
-      border: 1px solid rgba(255,255,255,0.9);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12px;
-      color: var(--muted);
-      max-width: 320px;
-    }
+        .center-cross{
+          position:absolute;
+          top:50%;
+          left:50%;
+          width:18px;
+          height:18px;
+          transform:translate(-50%, -50%);
+          pointer-events:none;
+          z-index:20;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
 
-    @media (max-width: 880px){
-      .content{
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
-      }
-      .app{
-        height: auto;
-        min-height: 92vh;
-      }
-      .map-canvas{
-        height: 52vh;
-      }
-    }
-  </style>
+        .center-cross-svg{
+          width:18px;
+          height:18px;
+          display:block;
+          overflow:visible;
+        }
+
+        .center-cross-svg line{
+          stroke:#d90429;
+          stroke-width:1;
+          stroke-linecap:square;
+          shape-rendering:crispEdges;
+          vector-effect:non-scaling-stroke;
+        }
+
+        @media (max-width: 880px){
+          .content{
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+          }
+
+          .app{
+            height: auto;
+            min-height: 92vh;
+          }
+
+          .map-stage{
+            height: 52vh;
+          }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="app">
-
+<div class="app">
     <div class="topbar">
-      <div class="brand">
-        <div class="brand-badge"></div>
-        <div>
-          <div class="brand-title">Карта Москвы</div>
+        <div class="brand">
+            <div class="brand-badge"></div>
+            <div>
+                <div class="brand-title">Карта Москвы</div>
+            </div>
         </div>
-      </div>
 
-      <a class="profile-link" href="/profile" title="Перейти в профиль">
-        <div class="avatar">👤</div>
-        <div class="profile-text">
-          <span>Профиль</span>
-          <span>настройки игрока</span>
-        </div>
-      </a>
+        <a class="profile-link" href="/profile" title="Перейти в профиль">
+            <div class="avatar">👤</div>
+            <div class="profile-text">
+                <span>Профиль</span>
+                <span>настройки игрока</span>
+            </div>
+        </a>
     </div>
 
     <div class="content">
-
-      <aside class="panel sidebar">
-        <div class="sidebar-header">
-          <h2>Настройки карты</h2>
-        </div>
-
-        <div class="sidebar-body">
-
-          <div class="section">
-            <a class="btn btn-primary" href="/new_pet">Добавить питомца</a>
-          </div>
-
-          <div class="section">
-            <div class="section-title">Фильтры</div>
-
-            <div class="control">
-              <span>Избранные метки</span>
-              <div class="toggle" aria-hidden="true"></div>
+        <aside class="panel sidebar">
+            <div class="sidebar-header">
+                <h2>Настройки карты</h2>
             </div>
 
-            <div class="control">
-              <span>Точки интереса</span>
-              <div class="toggle" aria-hidden="true"></div>
+            <div class="sidebar-body">
+                <div class="section">
+                    <button class="btn btn-primary" type="button" id="add-marker-btn">Добавить метку в центр</button>
+                    <button class="btn btn-secondary" type="button" id="clear-markers-btn">Очистить метки</button>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Фильтры</div>
+
+                    <div class="control">
+                        <span>Избранные метки</span>
+                        <div class="toggle" aria-hidden="true"></div>
+                    </div>
+
+                    <div class="control">
+                        <span>Точки интереса</span>
+                        <div class="toggle" aria-hidden="true"></div>
+                    </div>
+                </div>
             </div>
-          </div>
+        </aside>
 
-          <div class="section">
-            <div class="section-title">Тип карты</div>
-            <div class="chip-row">
-              <div class="chip"><span class="dot"></span>Обычная</div>
+        <main class="panel map">
+            <div class="map-header">
+                <div>
+                    <h2>Карта</h2>
+                    <div class="hint">Поиск адреса и работа с метками</div>
+                </div>
+
+                <div class="search-row">
+                    <input class="search-input" id="address-input" type="text" placeholder="Введите адрес или место">
+                    <button class="search-btn" id="search-btn" type="button">Найти</button>
+                </div>
             </div>
-          </div>
 
-          <div class="section">
-            <div class="section-title">Избранное</div>
-            <div class="chip-row">
-              <div class="chip"><span class="dot"></span>Дом</div>
+            <div class="map-stage">
+                <div id="map"></div>
+
+                <div class="center-cross" aria-hidden="true">
+                    <svg class="center-cross-svg" viewBox="0 0 18 18" shape-rendering="crispEdges">
+                        <line x1="9" y1="1" x2="9" y2="17"></line>
+                        <line x1="1" y1="9" x2="17" y2="9"></line>
+                    </svg>
+                </div>
             </div>
-          </div>
-
-        </div>
-      </aside>
-
-      <main class="panel map">
-        <div class="map-header">
-          <div>
-            <h2>Карта</h2>
-            <div class="hint">Плейсхолдер. Тут позже появится настоящая карта.</div>
-          </div>
-          <div class="hint">Масштаб: 100%</div>
-        </div>
-
-        <div class="map-canvas" role="img" aria-label="Плейсхолдер карты">
-          <div class="pin one" title="Метка"></div>
-          <div class="pin two" title="Метка"></div>
-          <div class="pin three" title="Метка"></div>
-
-          <div class="legend">
-            Подсказка: здесь будут реальные слои карты, точки, избранное и т.п.
-            Пока это сетка + декоративные метки.
-          </div>
-        </div>
-      </main>
-
+        </main>
     </div>
-  </div>
+</div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_api_key }}&lang=ru_RU"></script>
+<script>
+    let myMap;
+    let currentPlacemark = null;
+    const extraMarks = [];
+
+    const CENTER_MARK_SVG = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
+        <circle cx="6" cy="6" r="4" fill="#2563eb" stroke="#ffffff" stroke-width="1.5"/>
+      </svg>
+    `;
+    const CENTER_MARK_ICON = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(CENTER_MARK_SVG);
+
+    ymaps.ready(init);
+
+    function init() {
+      myMap = new ymaps.Map("map", {
+        center: [55.751244, 37.618423],
+        zoom: 10,
+        controls: ["zoomControl", "fullscreenControl"]
+      }, {
+        suppressMapOpenBlock: true
+      });
+
+      myMap.behaviors.enable(["drag", "scrollZoom"]);
+
+      document.getElementById("search-btn").addEventListener("click", searchAddress);
+      document.getElementById("address-input").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          searchAddress();
+        }
+      });
+
+      document.getElementById("add-marker-btn").addEventListener("click", function () {
+        const center = myMap.getCenter();
+        const placemark = createCenteredPlacemark(center, "Метка в центре карты");
+        myMap.geoObjects.add(placemark);
+        extraMarks.push(placemark);
+      });
+
+      document.getElementById("clear-markers-btn").addEventListener("click", function () {
+        if (currentPlacemark) {
+          myMap.geoObjects.remove(currentPlacemark);
+          currentPlacemark = null;
+        }
+        extraMarks.forEach(mark => myMap.geoObjects.remove(mark));
+        extraMarks.length = 0;
+      });
+    }
+
+    function createCenteredPlacemark(coords, balloonContent) {
+      return new ymaps.Placemark(coords, {
+        balloonContent: balloonContent
+      }, {
+        iconLayout: "default#image",
+        iconImageHref: CENTER_MARK_ICON,
+        iconImageSize: [12, 12],
+        iconImageOffset: [-6, -6],
+        hideIconOnBalloonOpen: false
+      });
+    }
+
+    function searchAddress() {
+      const query = document.getElementById("address-input").value.trim();
+      if (!query) return;
+
+      ymaps.geocode(query, {
+        results: 1
+      }).then(function (res) {
+        const firstGeoObject = res.geoObjects.get(0);
+        if (!firstGeoObject) {
+          alert("Ничего не найдено");
+          return;
+        }
+
+        const coords = firstGeoObject.geometry.getCoordinates();
+        const fullAddress = firstGeoObject.getAddressLine();
+
+        if (currentPlacemark) {
+          myMap.geoObjects.remove(currentPlacemark);
+        }
+
+        currentPlacemark = createCenteredPlacemark(coords, fullAddress);
+        myMap.geoObjects.add(currentPlacemark);
+        myMap.setCenter(coords, 16, { duration: 300 });
+      }).catch(function () {
+        alert("Ошибка геокодирования");
+      });
+    }
+</script>
 </body>
 </html>
