@@ -1,8 +1,7 @@
 from flask import Flask, render_template, redirect, request
-from d import db_session
-from forms.reset_passw import ResetForm
+from data import db_session
 from forms.register_form import RegisterForm
-from d.person import Person
+from data.person import Person
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Bogdan_Lox'
@@ -50,6 +49,7 @@ def register():
 
     return render_template('register.html', title='Регистрация', form=form)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -69,6 +69,7 @@ def login():
         return redirect('/map')
 
     return render_template("login.html")
+
 
 @app.route('/reset', methods=['GET', 'POST'])
 def reset():
@@ -93,9 +94,11 @@ def reset():
 
     return render_template('reset.html')
 
+
 @app.route('/map')
 def map():
-    return render_template('map.html')
+    return render_template("map.html", yandex_api_key="ce4a66e0-6376-464a-8cfa-1c686e8a4299")
+
 
 @app.route('/profile')
 def profile():
@@ -111,6 +114,7 @@ def new_pet():
 def edit_pet():
     return render_template('edit_pet.html')
 
+
 @app.route('/')
 def index():
     return redirect('/login')
@@ -119,7 +123,6 @@ def index():
 @app.route('/edit_prof')
 def edit_prof():
     return render_template('edit_prof.html')
-
 
 
 if __name__ == '__main__':
