@@ -18,3 +18,7 @@ class RegisterForm(FlaskForm):
 
         if domain not in allowed_domains:
             raise ValidationError("Неверный формат ввода почты, убедитесь в правильности написания.")
+
+    def validate_password(self, field):
+        if len(field.data) < 8:
+            raise ValidationError("Слишком мало символов в пароле. Минимум 8 символов")
