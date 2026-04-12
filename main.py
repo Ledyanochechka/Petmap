@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request, session
+import requests
 from data import db_session
 from flask import jsonify
 from forms.register_form import RegisterForm
@@ -111,19 +112,50 @@ def map():
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
-        return redirect('/login')  # Если нет, отправляем логиниться
+        return redirect('/login')
 
     db_sess = db_session.create_session()
     person = db_sess.query(Person).filter(Person.id == session['user_id']).first()
+
     pets = []
+    fav_places = []
+
     if person:
         relations = db_sess.query(PetPerson).filter(PetPerson.id_person == person.id).all()
         pet_ids = [rel.id_animal for rel in relations]
         pets = db_sess.query(Pet).filter(Pet.id.in_(pet_ids)).all()
 
-    return render_template('profile.html', pets=pets, person=person)
+        raw_places = db_sess.query(Place).join(PlacePerson).filter(PlacePerson.id_person == person.id).all()
 
+        for p in raw_places:
+            try:
+                lat, lon = p.coordinates.split(',')
+                formatted_coords = f"{lon.strip()},{lat.strip()}"
 
+                params = {
+                    "apikey": "ce4a66e0-6376-464a-8cfa-1c686e8a4299",
+                    "geocode": formatted_coords,
+                    "format": "json",
+                    "results": 1
+                }
+                response = requests.get("https://geocode-maps.yandex.ru/1.x/", params=params)
+
+                if response.ok:
+                    data = response.json()
+                    feature_member = data["response"]["GeoObjectCollection"]["featureMember"]
+                    if feature_member:
+                        p.address = feature_member[0]["GeoObject"]["metaDataProperty"]["GeocoderMetaData"]["text"]
+                    else:
+                        p.address = "Адрес не найден"
+                else:
+                    p.address = f"Ошибка API: {response.status_code}"
+            except Exception as e:
+                print(f"Ошибка геокодинга: {e}")
+                p.address = "Ошибка загрузки адреса"
+
+            fav_places.append(p)
+
+    return render_template('profile.html', pets=pets, person=person, fav_places=fav_places)
 @app.route('/new_pet', methods=['GET', 'POST'])
 def new_pet():
     if 'user_id' not in session:

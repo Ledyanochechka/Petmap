@@ -452,6 +452,7 @@
 <script>
     let myMap;
     let currentPlacemark = null;
+    let searchMarker = null;
     const extraMarks = [];
 
     const CENTER_MARK_SVG = `
@@ -490,9 +491,14 @@
       });
 
       document.getElementById("clear-markers-btn").addEventListener("click", function () {
+        if (searchMarker) {
+            myMap.geoObjects.remove(searchMarker);
+            searchMarker = null;
+        }
+
         if (currentPlacemark) {
-          myMap.geoObjects.remove(currentPlacemark);
-          currentPlacemark = null;
+            myMap.geoObjects.remove(currentPlacemark);
+            currentPlacemark = null;
         }
         extraMarks.forEach(mark => myMap.geoObjects.remove(mark));
         extraMarks.length = 0;
@@ -518,6 +524,25 @@
             myMap.geoObjects.remove(favoriteGroup);
         }
     });
+    const urlParams = new URLSearchParams(window.location.search);
+    const latParam = urlParams.get('lat');
+    const lonParam = urlParams.get('lon');
+
+    if (latParam && lonParam) {
+        const targetCoords = [parseFloat(latParam), parseFloat(lonParam)];
+        myMap.setCenter(targetCoords, 16, { duration: 1000 });
+
+
+        searchMarker = new ymaps.Placemark(targetCoords, {
+            balloonContent: 'Выбранное место'
+        }, {
+            preset: 'islands#redDotIconWithCaption',
+            iconColor: '#ff0000'
+        });
+
+        myMap.geoObjects.add(searchMarker); // Возвращаем обычное добавление
+        searchMarker.balloon.open();
+    }
     }
 
     function createCenteredPlacemark(coords, balloonContent) {
@@ -536,7 +561,7 @@
         `;
 
         const mark = new ymaps.Placemark(coords, {
-            balloonContent: balloonHTML // Теперь передаем готовую верстку
+            balloonContent: balloonHTML
         }, {
             preset: 'islands#dotIcon',
             iconColor: '#ff0000'
