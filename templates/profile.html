@@ -262,6 +262,22 @@
             text-decoration: underline;
         }
 
+        .mini-remove-btn {
+            border: none;
+            background: none;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            color: #dc2626;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+        }
+
+        .mini-remove-btn:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 860px) {
             .content {
                 grid-template-columns: 1fr;
@@ -325,38 +341,33 @@
         <div class="panel">
             <div class="panel-title">Избранные места</div>
 
-            <div class="list">
-                <div class="place-card">
-                    <div class="place-left">
-                        <p class="place-name">Дом</p>
-                        <p class="place-meta">Ул. - Неизвестно</p>
-                        <p class="place-meta">Район - Неизвестно</p>
-                    </div>
-                    <div class="badge">🏠 Мой адрес</div>
-                </div>
-
                 {% if fav_places %}
                     {% for place in fav_places %}
                         <div class="place-card">
                             <div class="place-left">
                                 <p class="place-name">{{ place.name }}</p>
                                 <p class="place-meta">{{ place.address }}</p>
+
                                 <div class="mini-actions" style="margin-top: 8px;">
                                     <a href="/map?lat={{ place.coordinates.split(',')[0].strip() }}&lon={{ place.coordinates.split(',')[1].strip() }}"
-                                        class="mini-link" style="color: #1cc88a;">
-                                            📍 Показать на карте
+                                       class="mini-link" style="color: #1cc88a;">
+                                        📍 Показать на карте
                                     </a>
+
+                                    <form action="/remove_favorite/{{ place.id }}" method="post" style="display:inline;">
+                                        <button type="submit" class="mini-remove-btn">Удалить из избранного</button>
+                                    </form>
                                 </div>
                             </div>
+
                             <div class="badge">⭐ В избранном</div>
                         </div>
                     {% endfor %}
+                {% else %}
+                    <p class="status">У вас пока нет избранных мест</p>
                 {% endif %}
             </div>
 
-            <div class="mini-actions">
-                <a class="mini-link" href="/map">Показать на карте</a>
-            </div>
         </div>
 
     </div>

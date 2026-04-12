@@ -388,7 +388,6 @@
             <div class="avatar">👤</div>
             <div class="profile-text">
                 <span>Профиль</span>
-                <span>настройки игрока</span>
             </div>
         </a>
     </div>
@@ -402,6 +401,8 @@
             <div class="sidebar-body">
                 <div class="section">
                     <button class="btn btn-primary" type="button" id="add-marker-btn">Добавить метку в центр</button>
+                    <button class="btn btn-secondary" type="button" id="save-favorites-btn">Добавить метки в избранное
+                    </button>
                     <button class="btn btn-secondary" type="button" id="clear-markers-btn">Очистить метки</button>
                 </div>
 
@@ -409,8 +410,8 @@
                     <div class="section-title">Фильтры</div>
 
                     <div class="control">
-                        <span>Избранные метки</span>
-                        <div class="toggle" aria-hidden="true"></div>
+                        <span>Избранные места</span>
+                        <div class="toggle" id="favorites-toggle" aria-hidden="true"></div>
                     </div>
 
                     <div class="control">
@@ -454,106 +455,121 @@
     let currentPlacemark = null;
     let searchMarker = null;
     const extraMarks = [];
-
-    const CENTER_MARK_SVG = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12">
-        <circle cx="6" cy="6" r="4" fill="#2563eb" stroke="#ffffff" stroke-width="1.5"/>
-      </svg>
-    `;
-    const CENTER_MARK_ICON = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(CENTER_MARK_SVG);
+    let favoriteGroup = null;
+    let favToggle = null;
 
     ymaps.ready(init);
 
+    function escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function (m) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[m];
+        });
+    }
+
+    function normalizeCoord(value) {
+        return Number(parseFloat(value).toFixed(6));
+    }
+
+    function buildCoordsKey(lat, lon) {
+        return `${normalizeCoord(lat)},${normalizeCoord(lon)}`;
+    }
+
     function init() {
-      myMap = new ymaps.Map("map", {
-        center: [55.751244, 37.618423],
-        zoom: 10,
-        controls: ["zoomControl", "fullscreenControl"]
-      }, {
-        suppressMapOpenBlock: true
-      });
-
-      myMap.behaviors.enable(["drag", "scrollZoom"]);
-
-      document.getElementById("search-btn").addEventListener("click", searchAddress);
-      document.getElementById("address-input").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          searchAddress();
-        }
-      });
-
-      document.getElementById("add-marker-btn").addEventListener("click", function () {
-        const center = myMap.getCenter();
-        const placemark = createCenteredPlacemark(center, "Метка в центре карты");
-        myMap.geoObjects.add(placemark);
-        extraMarks.push(placemark);
-      });
-
-      document.getElementById("clear-markers-btn").addEventListener("click", function () {
-        if (searchMarker) {
-            myMap.geoObjects.remove(searchMarker);
-            searchMarker = null;
-        }
-
-        if (currentPlacemark) {
-            myMap.geoObjects.remove(currentPlacemark);
-            currentPlacemark = null;
-        }
-        extraMarks.forEach(mark => myMap.geoObjects.remove(mark));
-        extraMarks.length = 0;
-      });
-      let favoriteGroup = new ymaps.GeoObjectCollection();
-    const favToggle = document.querySelector('.control .toggle');
-
-    favToggle.parentElement.addEventListener('click', function() {
-        favToggle.classList.toggle('active');
-
-        if (favToggle.classList.contains('active')) {
-            fetch('/api/get_favorites')
-                .then(r => r.json())
-                .then(places => {
-                    favoriteGroup.removeAll();
-                    places.forEach(p => {
-                        const mark = createCenteredPlacemark([p.lat, p.lon], p.name);
-                        favoriteGroup.add(mark);
-                    });
-                    myMap.geoObjects.add(favoriteGroup);
-                });
-        } else {
-            myMap.geoObjects.remove(favoriteGroup);
-        }
-    });
-    const urlParams = new URLSearchParams(window.location.search);
-    const latParam = urlParams.get('lat');
-    const lonParam = urlParams.get('lon');
-
-    if (latParam && lonParam) {
-        const targetCoords = [parseFloat(latParam), parseFloat(lonParam)];
-        myMap.setCenter(targetCoords, 16, { duration: 1000 });
-
-
-        searchMarker = new ymaps.Placemark(targetCoords, {
-            balloonContent: 'Выбранное место'
+        myMap = new ymaps.Map("map", {
+            center: [55.751244, 37.618423],
+            zoom: 10,
+            controls: ["zoomControl", "fullscreenControl"]
         }, {
-            preset: 'islands#redDotIconWithCaption',
-            iconColor: '#ff0000'
+            suppressMapOpenBlock: true
         });
 
-        myMap.geoObjects.add(searchMarker); // Возвращаем обычное добавление
-        searchMarker.balloon.open();
-    }
+        myMap.behaviors.enable(["drag", "scrollZoom"]);
+
+        favoriteGroup = new ymaps.GeoObjectCollection();
+        favToggle = document.getElementById("favorites-toggle");
+
+        document.getElementById("search-btn").addEventListener("click", searchAddress);
+        document.getElementById("address-input").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                searchAddress();
+            }
+        });
+
+        document.getElementById("add-marker-btn").addEventListener("click", function () {
+            const center = myMap.getCenter();
+            const placemark = createCenteredPlacemark(center, "Метка в центре карты");
+            myMap.geoObjects.add(placemark);
+            extraMarks.push(placemark);
+        });
+
+        document.getElementById("save-favorites-btn").addEventListener("click", saveAllMarkersToFavorites);
+
+        document.getElementById("clear-markers-btn").addEventListener("click", function () {
+            if (searchMarker) {
+                myMap.geoObjects.remove(searchMarker);
+                searchMarker = null;
+            }
+
+            if (currentPlacemark) {
+                myMap.geoObjects.remove(currentPlacemark);
+                currentPlacemark = null;
+            }
+
+            extraMarks.forEach(mark => myMap.geoObjects.remove(mark));
+            extraMarks.length = 0;
+        });
+
+        favToggle.parentElement.addEventListener("click", async function () {
+            favToggle.classList.toggle("active");
+
+            if (favToggle.classList.contains("active")) {
+                await loadFavorites();
+            } else {
+                myMap.geoObjects.remove(favoriteGroup);
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const latParam = urlParams.get("lat");
+        const lonParam = urlParams.get("lon");
+
+        if (latParam && lonParam) {
+            const targetCoords = [parseFloat(latParam), parseFloat(lonParam)];
+            myMap.setCenter(targetCoords, 16, { duration: 1000 });
+
+            searchMarker = new ymaps.Placemark(targetCoords, {
+                balloonContent: "Выбранное место",
+                markerTitle: "Выбранное место"
+            }, {
+                preset: "islands#redDotIconWithCaption",
+                iconColor: "#ff0000"
+            });
+
+            myMap.geoObjects.add(searchMarker);
+            searchMarker.balloon.open();
+        }
     }
 
-    function createCenteredPlacemark(coords, balloonContent) {
+    function createCenteredPlacemark(coords, balloonTitle) {
+        const safeTitle = escapeHtml(balloonTitle);
+        const encodedName = encodeURIComponent(balloonTitle);
+
         const balloonHTML = `
             <div style="font-size: 14px; padding: 5px; color: #1f2937;">
-                <b style="display: block; margin-bottom: 8px;">${balloonContent}</b>
+                <b style="display: block; margin-bottom: 8px;">${safeTitle}</b>
                 <label style="cursor:pointer; display:flex; align-items:center; gap:8px; background: #f3f4f6; padding: 6px; border-radius: 6px;">
-                    <input type="checkbox" id="fav-checkbox"
-                        data-lat="${coords[0]}"
-                        data-lon="${coords[1]}"
-                        data-name="${balloonContent}"
+                    <input type="checkbox"
+                        id="fav-checkbox"
+                        data-lat="${normalizeCoord(coords[0])}"
+                        data-lon="${normalizeCoord(coords[1])}"
+                        data-name="${encodedName}"
                         onclick="toggleFavorite(this)">
                     <span>В избранное</span>
                 </label>
@@ -561,73 +577,212 @@
         `;
 
         const mark = new ymaps.Placemark(coords, {
-            balloonContent: balloonHTML
+            balloonContent: balloonHTML,
+            markerTitle: balloonTitle
         }, {
-            preset: 'islands#dotIcon',
-            iconColor: '#ff0000'
+            preset: "islands#dotIcon",
+            iconColor: "#ff0000"
         });
 
-        mark.events.add('balloonopen', function () {
-            const lat = coords[0];
-            const lon = coords[1];
-
-            fetch(`/api/toggle_favorite?lat=${lat}&lon=${lon}`)
-                .then(r => r.json())
-                .then(data => {
-                    const checkbox = document.getElementById('fav-checkbox');
-                    if (checkbox) {
-                        checkbox.checked = data.is_fav;
-                    }
-                });
+        mark.events.add("balloonopen", function () {
+            updateBalloonFavoriteState(coords);
         });
 
         return mark;
     }
 
+    function createFavoritePlacemark(coords, title) {
+        return new ymaps.Placemark(coords, {
+            balloonContent: `<b>${escapeHtml(title)}</b>`
+        }, {
+            preset: "islands#dotIcon",
+            iconColor: "#1cc88a"
+        });
+    }
+
+    async function updateBalloonFavoriteState(coords) {
+        const lat = normalizeCoord(coords[0]);
+        const lon = normalizeCoord(coords[1]);
+
+        const response = await fetch(`/api/toggle_favorite?lat=${lat}&lon=${lon}`);
+        const data = await response.json();
+
+        const checkbox = document.getElementById("fav-checkbox");
+        if (checkbox) {
+            checkbox.checked = data.is_fav;
+        }
+    }
+
+    function getAllPlacedMarkersData() {
+        const markers = [currentPlacemark, searchMarker, ...extraMarks].filter(Boolean);
+        const seen = new Set();
+        const result = [];
+
+        markers.forEach(mark => {
+            const coords = mark.geometry.getCoordinates();
+            const lat = normalizeCoord(coords[0]);
+            const lon = normalizeCoord(coords[1]);
+            const key = buildCoordsKey(lat, lon);
+
+            if (seen.has(key)) {
+                return;
+            }
+
+            seen.add(key);
+            result.push({
+                lat: lat,
+                lon: lon,
+                name: mark.properties.get("markerTitle") || "Метка"
+            });
+        });
+
+        return result;
+    }
+
+    async function saveCurrentMarkersToFavorites() {
+        const markers = getAllPlacedMarkersData();
+
+        if (!markers.length) {
+            alert("На карте нет меток для сохранения");
+            return;
+        }
+
+        const response = await fetch("/api/save_favorites", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ markers: markers })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.message || "Не удалось сохранить метки");
+            return;
+        }
+
+        alert(`Сохранено в избранное: ${result.added_count}`);
+
+        if (favToggle.classList.contains("active")) {
+            await loadFavorites();
+        }
+    }
+
+    async function loadFavorites() {
+        const response = await fetch("/api/get_favorites");
+        const places = await response.json();
+
+        myMap.geoObjects.remove(favoriteGroup);
+        favoriteGroup.removeAll();
+
+        places.forEach(p => {
+            const mark = createFavoritePlacemark([p.lat, p.lon], p.name);
+            favoriteGroup.add(mark);
+        });
+
+        myMap.geoObjects.add(favoriteGroup);
+    }
 
     function searchAddress() {
-      const query = document.getElementById("address-input").value.trim();
-      if (!query) return;
+        const query = document.getElementById("address-input").value.trim();
+        if (!query) return;
 
-      ymaps.geocode(query, {
-        results: 1
-      }).then(function (res) {
-        const firstGeoObject = res.geoObjects.get(0);
-        if (!firstGeoObject) {
-          alert("Ничего не найдено");
-          return;
-        }
+        ymaps.geocode(query, {
+            results: 1
+        }).then(function (res) {
+            const firstGeoObject = res.geoObjects.get(0);
 
-        const coords = firstGeoObject.geometry.getCoordinates();
-        const fullAddress = firstGeoObject.getAddressLine();
+            if (!firstGeoObject) {
+                alert("Ничего не найдено");
+                return;
+            }
 
-        if (currentPlacemark) {
-          myMap.geoObjects.remove(currentPlacemark);
-        }
+            const coords = firstGeoObject.geometry.getCoordinates();
+            const fullAddress = firstGeoObject.getAddressLine();
 
-        currentPlacemark = createCenteredPlacemark(coords, fullAddress);
-        myMap.geoObjects.add(currentPlacemark);
-        myMap.setCenter(coords, 16, { duration: 300 });
-      }).catch(function () {
-        alert("Ошибка геокодирования");
-      });
+            if (currentPlacemark) {
+                myMap.geoObjects.remove(currentPlacemark);
+            }
+
+            currentPlacemark = createCenteredPlacemark(coords, fullAddress);
+            myMap.geoObjects.add(currentPlacemark);
+            myMap.setCenter(coords, 16, { duration: 300 });
+
+        }).catch(function () {
+            alert("Ошибка геокодирования");
+        });
     }
-    function toggleFavorite(checkbox) {
+
+    function saveAllMarkersToFavorites() {
+    const markers = [];
+
+    if (currentPlacemark) {
+        const coords = currentPlacemark.geometry.getCoordinates();
+        markers.push({
+            lat: coords[0],
+            lon: coords[1],
+            name: "Найденное место"
+        });
+    }
+
+    if (searchMarker) {
+        const coords = searchMarker.geometry.getCoordinates();
+        markers.push({
+            lat: coords[0],
+            lon: coords[1],
+            name: "Выбранное место"
+        });
+    }
+
+    extraMarks.forEach(mark => {
+        const coords = mark.geometry.getCoordinates();
+        markers.push({
+            lat: coords[0],
+            lon: coords[1],
+            name: "Метка в центре карты"
+        });
+    });
+
+    if (!markers.length) {
+        alert("Нет меток для сохранения");
+        return;
+    }
+
+    fetch('/api/save_favorites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markers: markers })
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert(`Сохранено меток: ${data.added_count}`);
+    });
+}
+
+    async function toggleFavorite(checkbox) {
         const data = {
-            lat: checkbox.dataset.lat,
-            lon: checkbox.dataset.lon,
-            name: checkbox.dataset.name
+            lat: normalizeCoord(checkbox.dataset.lat),
+            lon: normalizeCoord(checkbox.dataset.lon),
+            name: decodeURIComponent(checkbox.dataset.name)
         };
 
-        fetch('/api/toggle_favorite', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/toggle_favorite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            console.log("Результат:", result.action);
         });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.message || "Ошибка при работе с избранным");
+            return;
+        }
+
+        if (favToggle.classList.contains("active")) {
+            await loadFavorites();
+        }
     }
 </script>
 </body>
