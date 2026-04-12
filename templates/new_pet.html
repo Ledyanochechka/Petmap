@@ -114,29 +114,28 @@
 </head>
 <body>
     <div class="box">
-        <h2>Новый питомец</h2>
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            <h2>Новый питомец</h2>
 
-        <label class="upload-area">
-            <input type="file" accept="image/*">
-            <p>Перетащите фото сюда<br>или нажмите для выбора</p>
-        </label>
+            <label class="upload-area">
+                <input type="file" accept="image/*">
+                <p>Перетащите фото сюда<br>или нажмите для выбора</p>
+            </label>
 
-        <div class="input-group">
-            <input type="pet name" id="pet name" placeholder="Имя питомца">
-        </div>
+            <div class="input-group">
+                {{ form.name(placeholder="Имя питомца") }}
+            </div>
 
-        <div class="input-group">
-            <input type="pet type" id="pet type" placeholder="Порода питомца">
-        </div>
+            <div class="input-group">
+                {{ form.pet_type(placeholder="Порода/Тип") }}
+            </div>
 
-        <div class="input-group">
-            <input type="pet age" id="pet age" placeholder="Возраст питомца">
-        </div>
-
-        <div class="btn-row">
-            <button class="btn">Сохранить питомца</button>
-            <a href="/map" class="btn btn-secondary link-btn">Назад</a>
-        </div>
+            <div class="btn-row">
+                {{ form.submit(class="btn") }}
+                <a href="/profile" class="btn btn-secondary link-btn">Назад</a>
+            </div>
+        </form>
     </div>
 </body>
 </html>

@@ -1,7 +1,11 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, session
 from data import db_session
 from forms.register_form import RegisterForm
+from data.pet import Pet
 from data.person import Person
+from data.pettype import PetType
+from data.petperson import PetPerson
+from forms.pet_form import PetForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Bogdan_Lox'
@@ -66,6 +70,7 @@ def login():
         if not person.check_password(password):
             return render_template("login.html", message="Неверный пароль")
 
+        session['user_id'] = person.id
         return redirect('/map')
 
     return render_template("login.html")
@@ -102,12 +107,53 @@ def map():
 
 @app.route('/profile')
 def profile():
-    return render_template('profile.html')
+    if 'user_id' not in session:
+        return redirect('/login')  # Если нет, отправляем логиниться
+
+    db_sess = db_session.create_session()
+    person = db_sess.query(Person).filter(Person.id == session['user_id']).first()
+    pets = []
+    if person:
+        relations = db_sess.query(PetPerson).filter(PetPerson.id_person == person.id).all()
+        pet_ids = [rel.id_animal for rel in relations]
+        pets = db_sess.query(Pet).filter(Pet.id.in_(pet_ids)).all()
+
+    return render_template('profile.html', pets=pets, person=person)
 
 
-@app.route('/new_pet')
+@app.route('/new_pet', methods=['GET', 'POST'])
 def new_pet():
-    return render_template('new_pet.html')
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    form = PetForm()
+
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        type_name = form.pet_type.data.strip()
+        pet_type = db_sess.query(PetType).filter(PetType.name == type_name).first()
+
+        if not pet_type:
+            pet_type = PetType(name=type_name)
+            db_sess.add(pet_type)
+            db_sess.flush()
+        new_pet_obj = Pet(
+            name=form.name.data,
+            type_id=pet_type.id
+        )
+        db_sess.add(new_pet_obj)
+        db_sess.flush()
+
+        relation = PetPerson(
+            id_animal=new_pet_obj.id,
+            id_person=session['user_id']
+        )
+        db_sess.add(relation)
+
+        db_sess.commit()  # Сохраняем всё в БД
+        return redirect('/profile')
+
+    return render_template('new_pet.html', form=form)
 
 
 @app.route('/edit_pet')

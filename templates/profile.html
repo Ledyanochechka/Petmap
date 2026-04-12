@@ -282,7 +282,7 @@
         <div class="user">
             <div class="avatar" title="Иконка профиля">👤</div>
             <div class="user-info">
-                <p class="username">Имя Пользователя</p>
+                <p class="username">{{ person.name }}</p>
                 <p class="status">Город: неизвестно</p>
             </div>
         </div>
@@ -300,13 +300,21 @@
             <div class="panel-title">Питомцы</div>
 
             <div class="list">
-                <div class="pet-card">
-                    <div class="pet-photo" title="Фото питомца">🐾</div>
-                    <div class="pet-info">
-                        <p class="pet-name">Кусь</p>
-                        <p class="pet-meta">Порода: немецкий шпиц<br>Возраст: 3 года</p>
-                    </div>
-                </div>
+                {% if pets %}
+                    {% for pet in pets %}
+                        <div class="pet-card">
+                            <div class="pet-photo" title="Фото питомца">🐾</div>
+                            <div class="pet-info">
+                                <p class="pet-name">{{ pet.name }}</p>
+                                <p class="pet-meta">
+                                    Порода: {{ pet.pet_type.name if pet.pet_type else "не указана" }}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="status">У вас пока нет питомцев</p>
+                {% endif %}
             </div>
 
             <div class="mini-actions">
