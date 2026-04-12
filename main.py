@@ -1,11 +1,14 @@
 from flask import Flask, render_template, redirect, request, session
 from data import db_session
+from flask import jsonify
 from forms.register_form import RegisterForm
 from data.pet import Pet
 from data.person import Person
 from data.pettype import PetType
 from data.petperson import PetPerson
 from forms.pet_form import PetForm
+from data.place import Place
+from data.placeperson import PlacePerson
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Bogdan_Lox'
@@ -169,6 +172,55 @@ def index():
 @app.route('/edit_prof')
 def edit_prof():
     return render_template('edit_prof.html')
+
+
+@app.route('/api/toggle_favorite', methods=['GET', 'POST'])
+def handle_favorite():
+    if 'user_id' not in session:
+        return jsonify({"is_fav": False, "status": "error"}), 403
+
+    db_sess = db_session.create_session()
+    lat = request.args.get('lat') or request.json.get('lat')
+    lon = request.args.get('lon') or request.json.get('lon')
+    coords = f"{lat}, {lon}"
+    place = db_sess.query(Place).filter(Place.coordinates == coords).first()
+    if not place and request.method == 'POST':
+        place = Place(name=request.json.get('name', 'Метка'), coordinates=coords)
+        db_sess.add(place)
+        db_sess.flush()
+
+    fav = None
+    if place:
+        fav = db_sess.query(PlacePerson).filter(
+            PlacePerson.id_place == place.id, PlacePerson.id_person == session['user_id']
+        ).first()
+
+    if request.method == 'POST':
+        if fav:
+            db_sess.delete(fav)
+            res = {"action": "removed", "is_fav": False}
+        else:
+            db_sess.add(PlacePerson(id_place=place.id, id_person=session['user_id']))
+            res = {"action": "added", "is_fav": True}
+        db_sess.commit()
+        return jsonify(res)
+
+    return jsonify({"is_fav": bool(fav)})
+
+
+@app.route('/api/get_favorites')
+def get_favorites():
+    if 'user_id' not in session:
+        return jsonify([])
+
+    db_sess = db_session.create_session()
+    places = db_sess.query(Place).join(PlacePerson).filter(PlacePerson.id_person == session['user_id']).all()
+
+    return jsonify([{
+        "lat": float(p.coordinates.split(',')[0]),
+        "lon": float(p.coordinates.split(',')[1]),
+        "name": p.name
+    } for p in places])
 
 
 if __name__ == '__main__':

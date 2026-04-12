@@ -360,6 +360,17 @@
             height: 52vh;
           }
         }
+
+        .toggle.active {
+            background: #1cc88a !important;
+        }
+        .toggle.active::after {
+            left: 22px;
+        }
+        .toggle, .toggle::after {
+            transition: all 0.3s ease;
+        }
+
     </style>
 </head>
 
@@ -486,19 +497,68 @@
         extraMarks.forEach(mark => myMap.geoObjects.remove(mark));
         extraMarks.length = 0;
       });
+      let favoriteGroup = new ymaps.GeoObjectCollection();
+    const favToggle = document.querySelector('.control .toggle');
+
+    favToggle.parentElement.addEventListener('click', function() {
+        favToggle.classList.toggle('active');
+
+        if (favToggle.classList.contains('active')) {
+            fetch('/api/get_favorites')
+                .then(r => r.json())
+                .then(places => {
+                    favoriteGroup.removeAll();
+                    places.forEach(p => {
+                        const mark = createCenteredPlacemark([p.lat, p.lon], p.name);
+                        favoriteGroup.add(mark);
+                    });
+                    myMap.geoObjects.add(favoriteGroup);
+                });
+        } else {
+            myMap.geoObjects.remove(favoriteGroup);
+        }
+    });
     }
 
     function createCenteredPlacemark(coords, balloonContent) {
-      return new ymaps.Placemark(coords, {
-        balloonContent: balloonContent
-      }, {
-        iconLayout: "default#image",
-        iconImageHref: CENTER_MARK_ICON,
-        iconImageSize: [12, 12],
-        iconImageOffset: [-6, -6],
-        hideIconOnBalloonOpen: false
-      });
+        const balloonHTML = `
+            <div style="font-size: 14px; padding: 5px; color: #1f2937;">
+                <b style="display: block; margin-bottom: 8px;">${balloonContent}</b>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:8px; background: #f3f4f6; padding: 6px; border-radius: 6px;">
+                    <input type="checkbox" id="fav-checkbox"
+                        data-lat="${coords[0]}"
+                        data-lon="${coords[1]}"
+                        data-name="${balloonContent}"
+                        onclick="toggleFavorite(this)">
+                    <span>В избранное</span>
+                </label>
+            </div>
+        `;
+
+        const mark = new ymaps.Placemark(coords, {
+            balloonContent: balloonHTML // Теперь передаем готовую верстку
+        }, {
+            preset: 'islands#dotIcon',
+            iconColor: '#ff0000'
+        });
+
+        mark.events.add('balloonopen', function () {
+            const lat = coords[0];
+            const lon = coords[1];
+
+            fetch(`/api/toggle_favorite?lat=${lat}&lon=${lon}`)
+                .then(r => r.json())
+                .then(data => {
+                    const checkbox = document.getElementById('fav-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = data.is_fav;
+                    }
+                });
+        });
+
+        return mark;
     }
+
 
     function searchAddress() {
       const query = document.getElementById("address-input").value.trim();
@@ -526,6 +586,23 @@
       }).catch(function () {
         alert("Ошибка геокодирования");
       });
+    }
+    function toggleFavorite(checkbox) {
+        const data = {
+            lat: checkbox.dataset.lat,
+            lon: checkbox.dataset.lon,
+            name: checkbox.dataset.name
+        };
+
+        fetch('/api/toggle_favorite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log("Результат:", result.action);
+        });
     }
 </script>
 </body>

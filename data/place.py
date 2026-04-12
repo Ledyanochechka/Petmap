@@ -11,7 +11,7 @@ class Place(SqlAlchemyBase):
                            primary_key=True, autoincrement=True)
     place_person = orm.relationship("PlacePerson", back_populates='place')
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
-    coordinates = sqlalchemy.Column(sqlalchemy.Numeric, nullable=True)
+    coordinates = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     type = sqlalchemy.Column(sqlalchemy.Integer,
                              sqlalchemy.ForeignKey("place_name.id"))
     place_name = orm.relationship('PlaceName')
