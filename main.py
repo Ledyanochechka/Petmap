@@ -12,6 +12,7 @@ from data.petperson import PetPerson
 from forms.pet_form import PetForm
 from data.place import Place
 from data.placeperson import PlacePerson
+from waitress import serve
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Bogdan_Lox'
@@ -26,7 +27,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 def main():
     db_session.global_init("db/main_db.db")
-    app.run()
+    #app.run()
+    serve(app, host='0.0.0.0', port=5000)
 
 
 def allowed_file(filename):
