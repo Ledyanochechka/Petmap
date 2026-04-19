@@ -12,7 +12,7 @@ from data.place import Place
 from data.placeperson import PlacePerson
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Alexey_Lox'
+app.config['SECRET_KEY'] = 'Bogdan_Lox'
 
 
 def main():
@@ -106,9 +106,6 @@ def reset():
 
 @app.route('/map')
 def map():
-    if 'user_id' not in session:
-        return redirect('/login')
-
     return render_template("map.html", yandex_api_key="ce4a66e0-6376-464a-8cfa-1c686e8a4299")
 
 
@@ -159,43 +156,26 @@ def profile():
             fav_places.append(p)
 
     return render_template('profile.html', pets=pets, person=person, fav_places=fav_places)
-
-@app.route('/remove_favorite/<int:place_id>', methods=['POST'])
-def remove_favorite(place_id):
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    db_sess = db_session.create_session()
-
-    relation = db_sess.query(PlacePerson).filter(
-        PlacePerson.id_place == place_id,
-        PlacePerson.id_person == session['user_id']
-    ).first()
-
-    if relation:
-        db_sess.delete(relation)
-        db_sess.commit()
-
-    return redirect('/profile')
-
-
 @app.route('/new_pet', methods=['GET', 'POST'])
 def new_pet():
     if 'user_id' not in session:
         return redirect('/login')
 
-    db_sess = db_session.create_session()
     form = PetForm()
-    all_types = db_sess.query(PetType).all()
-    form.pet_type.choices = [(t.id, t.name) for t in all_types]
 
     if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        type_name = form.pet_type.data.strip()
+        pet_type = db_sess.query(PetType).filter(PetType.name == type_name).first()
+
+        if not pet_type:
+            pet_type = PetType(name=type_name)
+            db_sess.add(pet_type)
+            db_sess.flush()
         new_pet_obj = Pet(
             name=form.name.data,
-            type_id=form.pet_type.data,
-            breed=form.breed.data
+            type_id=pet_type.id
         )
-
         db_sess.add(new_pet_obj)
         db_sess.flush()
 
@@ -205,9 +185,8 @@ def new_pet():
         )
         db_sess.add(relation)
 
-        db_sess.commit()
+        db_sess.commit()  # Сохраняем всё в БД
         return redirect('/profile')
-
 
     return render_template('new_pet.html', form=form)
 
@@ -233,30 +212,19 @@ def handle_favorite():
         return jsonify({"is_fav": False, "status": "error"}), 403
 
     db_sess = db_session.create_session()
-    data = request.get_json(silent=True) or {}
-
-    lat = request.args.get('lat') or data.get('lat')
-    lon = request.args.get('lon') or data.get('lon')
-
-    if not lat or not lon:
-        return jsonify({"status": "error", "message": "Нет координат"}), 400
-
+    lat = request.args.get('lat') or request.json.get('lat')
+    lon = request.args.get('lon') or request.json.get('lon')
     coords = f"{lat}, {lon}"
     place = db_sess.query(Place).filter(Place.coordinates == coords).first()
-
     if not place and request.method == 'POST':
-        place = Place(
-            name=data.get('name', 'Метка'),
-            coordinates=coords
-        )
+        place = Place(name=request.json.get('name', 'Метка'), coordinates=coords)
         db_sess.add(place)
         db_sess.flush()
 
     fav = None
     if place:
         fav = db_sess.query(PlacePerson).filter(
-            PlacePerson.id_place == place.id,
-            PlacePerson.id_person == session['user_id']
+            PlacePerson.id_place == place.id, PlacePerson.id_person == session['user_id']
         ).first()
 
     if request.method == 'POST':
@@ -271,44 +239,6 @@ def handle_favorite():
 
     return jsonify({"is_fav": bool(fav)})
 
-@app.route('/api/save_favorites', methods=['POST'])
-def save_favorites():
-    if 'user_id' not in session:
-        return jsonify({"status": "error", "message": "Не авторизован"}), 403
-
-    db_sess = db_session.create_session()
-    data = request.get_json(silent=True) or {}
-    markers = data.get("markers", [])
-
-    added_count = 0
-
-    for marker in markers:
-        lat = marker.get("lat")
-        lon = marker.get("lon")
-        name = marker.get("name", "Метка")
-
-        if lat is None or lon is None:
-            continue
-
-        coords = f"{lat}, {lon}"
-        place = db_sess.query(Place).filter(Place.coordinates == coords).first()
-
-        if not place:
-            place = Place(name=name, coordinates=coords)
-            db_sess.add(place)
-            db_sess.flush()
-
-        fav = db_sess.query(PlacePerson).filter(
-            PlacePerson.id_place == place.id,
-            PlacePerson.id_person == session['user_id']
-        ).first()
-
-        if not fav:
-            db_sess.add(PlacePerson(id_place=place.id, id_person=session['user_id']))
-            added_count += 1
-
-    db_sess.commit()
-    return jsonify({"status": "ok", "added_count": added_count})
 
 @app.route('/api/get_favorites')
 def get_favorites():
