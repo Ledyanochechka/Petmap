@@ -13,6 +13,7 @@ class Pet(SqlAlchemyBase):
     pet_person = orm.relationship("PetPerson", back_populates='pet')
 
     name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
+    breed = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     type_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("pet_type.id"))

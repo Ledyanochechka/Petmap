@@ -21,20 +21,25 @@
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 320px;
+            width: 350px;
+            text-align: center;
         }
 
         .input-group {
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
 
-        .input-group input {
-            margin-top: 15px;
+        .input-group input,
+        .input-group select {
+            margin-top: 10px;
             width: 100%;
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #ccc;
             font-size: 14px;
+            background-color: white;
+            height: 40px;
+            box-sizing: border-box;
         }
 
         .btn {
@@ -83,17 +88,19 @@
         }
 
         .upload-area {
-            width: 300px;
-            height: 300px;
+            width: 100%;
+            max-width: 280px;
+            height: 280px;
             border: 2px dashed #ccc;
             border-radius: 12px;
             background: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
+            text-align: center;
             cursor: pointer;
             transition: 0.3s;
-            position: relative;
+            margin: 0 auto 20px auto;
         }
 
         .upload-area:hover {
@@ -128,7 +135,11 @@
             </div>
 
             <div class="input-group">
-                {{ form.pet_type(placeholder="Порода/Тип") }}
+                {{ form.pet_type() }}
+            </div>
+
+            <div class="input-group">
+                {{ form.breed(placeholder="Порода") }}
             </div>
 
             <div class="btn-row">
