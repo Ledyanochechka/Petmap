@@ -319,16 +319,16 @@
                 {% if pets %}
                     {% for pet in pets %}
                         <div class="pet-card">
-                            <div class="pet-photo" title="Фото питомца">🐾</div>
-                            <div class="pet-info">
-                                <p class="pet-name">{{ pet.name }}</p>
-                                <p class="pet-meta">
-                                    Тип: {{ pet.pet_type.name if pet.pet_type else "не указан" }}
-                                </p>
-                                <p class="pet-meta">
-                                    Порода: {{ pet.breed if pet.breed else "не указана" }}
-                                </p>
-                            </div>
+                            {% if pet.photo %}
+                                <img src="{{ url_for('static', filename='uploads/pets/' ~ pet.photo) }}"
+                                    alt="{{ pet.name }}"
+                                    class="pet-photo">
+                            {% else %}
+                                <div class="pet-photo pet-photo-placeholder">Нет фото</div>
+                            {% endif %}
+
+                            <h3>{{ pet.name }}</h3>
+                            <p>{{ pet.breed }}</p>
                         </div>
                     {% endfor %}
                 {% else %}
