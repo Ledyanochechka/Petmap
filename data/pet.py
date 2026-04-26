@@ -17,5 +17,6 @@ class Pet(SqlAlchemyBase):
 
     type_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("pet_type.id"))
+    photo = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     pet_type = orm.relationship('PetType', back_populates='pets')

@@ -13,7 +13,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .box {
@@ -26,7 +28,7 @@
         }
 
         .input-group {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
 
         .input-group input,
@@ -54,6 +56,10 @@
             transition: 0.3s;
         }
 
+        .btn:hover {
+            background: #2e59d9;
+        }
+
         .btn-row {
             display: flex;
             justify-content: space-between;
@@ -70,21 +76,15 @@
             color: #333;
         }
 
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
         .link-btn {
-            background: #4e73df;
-            color: white;
             text-decoration: none;
             display: inline-flex;
             justify-content: center;
             align-items: center;
-        }
-
-        .link-btn:hover {
-            background: #2e59d9;
-        }
-
-        .upload-container {
-        text-align: center;
         }
 
         .upload-area {
@@ -101,9 +101,12 @@
             cursor: pointer;
             transition: 0.3s;
             margin: 0 auto 20px auto;
+            overflow: hidden;
+            position: relative;
         }
 
-        .upload-area:hover {
+        .upload-area:hover,
+        .upload-area.dragover {
             border-color: #4e73df;
             background: #f9fbff;
         }
@@ -112,23 +115,52 @@
             color: #666;
             font-size: 16px;
             pointer-events: none;
+            padding: 10px;
+            line-height: 1.4;
         }
 
         .upload-area input {
             display: none;
         }
+
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .message {
+            color: #d63333;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .file-hint {
+            margin-top: -10px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body>
     <div class="box">
-        <form action="" method="post">
+        <form action="" method="post" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
             <h2>Новый питомец</h2>
 
-            <label class="upload-area">
-                <input type="file" accept="image/*">
-                <p>Перетащите фото сюда<br>или нажмите для выбора</p>
+            {% if message %}
+                <div class="message">{{ message }}</div>
+            {% endif %}
+
+            <label class="upload-area" id="uploadArea" for="photo">
+                <input type="file" id="photo" name="photo" accept="image/*">
+                <img id="previewImage" class="preview-image" alt="Фото питомца">
+                <p id="uploadText">Перетащите фото сюда<br>или нажмите для выбора</p>
             </label>
+
+            <div class="file-hint">Поддерживаются изображения: JPG, PNG, WEBP и другие</div>
 
             <div class="input-group">
                 {{ form.name(placeholder="Имя питомца") }}
@@ -148,5 +180,54 @@
             </div>
         </form>
     </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('photo');
+        const previewImage = document.getElementById('previewImage');
+        const uploadText = document.getElementById('uploadText');
+
+        function showPreview(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                previewImage.src = event.target.result;
+                previewImage.style.display = 'block';
+                uploadText.style.display = 'none';
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        uploadArea.addEventListener('dragover', function(event) {
+            event.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(event) {
+            event.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                showPreview(files[0]);
+            }
+        });
+    </script>
 </body>
 </html>
