@@ -1,8 +1,8 @@
-from flask import Flask, render_template, redirect, request, session, jsonify
+from flask import Flask, render_template, redirect, request, session, jsonify, url_for
 import os
 import requests
 import uuid
-from werkzeug.utils import secure_filename
+import urllib.parse
 from data import db_session
 from forms.register_form import RegisterForm
 from data.pet import Pet
@@ -19,7 +19,8 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'pets')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-
+app.config['AVATAR_FOLDER'] = os.path.join('static', 'uploads', 'avatars')
+os.makedirs(app.config['AVATAR_FOLDER'], exist_ok=True)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
@@ -118,8 +119,15 @@ def reset():
 
 @app.route('/map')
 def map():
-    return render_template("map.html", yandex_api_key="ce4a66e0-6376-464a-8cfa-1c686e8a4299")
+    if 'user_id' not in session:
+        return redirect('/login')
 
+    db_sess = db_session.create_session()
+    person = db_sess.query(Person).get(session['user_id'])
+
+    return render_template("map.html",
+                           yandex_api_key="ce4a66e0-6376-464a-8cfa-1c686e8a4299",
+                           person=person)
 
 @app.route('/profile')
 def profile():
@@ -131,8 +139,17 @@ def profile():
 
     pets = []
     fav_places = []
+    user_city = "неизвестно"
 
     if person:
+        if person.address and person.address != "не указан":
+            parts = [p.strip() for p in person.address.split(',')]
+            if "обл." in parts[1] or "автономный" in parts[1].lower():
+                user_city = parts[2] if len(parts) > 2 else parts[1]
+            else:
+                user_city = parts[0]
+        else:
+            user_city = "неизвестно"
         relations = db_sess.query(PetPerson).filter(PetPerson.id_person == person.id).all()
         pet_ids = [rel.id_animal for rel in relations]
         pets = db_sess.query(Pet).filter(Pet.id.in_(pet_ids)).all()
@@ -179,8 +196,46 @@ def profile():
         'profile.html',
         pets=pets,
         person=person,
-        fav_places=fav_places
+        fav_places=fav_places,
+        user_city=user_city
     )
+
+
+@app.route('/api/upload_avatar', methods=['POST'])
+def upload_avatar():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    file = request.files.get('avatar')
+    if file and allowed_file(file.filename):
+        db_sess = db_session.create_session()
+        user = db_sess.query(Person).get(session['user_id'])
+        _, ext = os.path.splitext(file.filename)
+        filename = f"avatar_{user.id}_{uuid.uuid4().hex}{ext.lower()}"
+        file.save(os.path.join(app.config['AVATAR_FOLDER'], filename))
+        user.avatar = filename
+        db_sess.commit()
+
+        return jsonify({"status": "ok", "url": url_for('static', filename='uploads/avatars/' + filename)})
+
+    return jsonify({"status": "error", "message": "Invalid file"}), 400
+
+@app.route('/api/save_user_address', methods=['POST'])
+def save_user_address():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    address = data.get('address')
+
+    db_sess = db_session.create_session()
+    user = db_sess.query(Person).get(session['user_id'])
+
+    if user:
+        user.address = address
+        db_sess.commit()
+        return jsonify({"status": "ok"})
+    return jsonify({"error": "User not found"}), 404
 
 
 @app.route('/new_pet', methods=['GET', 'POST'])
@@ -395,6 +450,88 @@ def get_favorites():
         for p in places
     ])
 
+@app.route('/api/save_favorites', methods=['POST'])
+def save_favorites():
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
 
+    db_sess = db_session.create_session()
+    data = request.json
+    markers = data.get('markers', [])
+    added_count = 0
+
+    for m in markers:
+        lat = m.get('lat')
+        lon = m.get('lon')
+        name = m.get('name', 'Избранное место')
+        coords = f"{lat}, {lon}"
+        place = db_sess.query(Place).filter(Place.coordinates == coords).first()
+        if not place:
+            place = Place(name=name, coordinates=coords)
+            db_sess.add(place)
+            db_sess.flush()
+        existing_fav = db_sess.query(PlacePerson).filter(
+            PlacePerson.id_place == place.id,
+            PlacePerson.id_person == session['user_id']
+        ).first()
+
+        if not existing_fav:
+            new_fav = PlacePerson(id_place=place.id, id_person=session['user_id'])
+            db_sess.add(new_fav)
+            added_count += 1
+
+    db_sess.commit()
+    return jsonify({"status": "success", "added_count": added_count})
+
+
+@app.route('/remove_favorite/<int:id>', methods=['POST'])
+def remove_favorite(id):
+    if 'user_id' not in session:
+        return redirect('/login')
+
+    db_sess = db_session.create_session()
+    fav = db_sess.query(PlacePerson).filter(
+        PlacePerson.id_place == id,
+        PlacePerson.id_person == session['user_id']
+    ).first()
+
+    if fav:
+        db_sess.delete(fav)
+        db_sess.commit()
+
+    return redirect('/profile')
+
+
+@app.route('/api/get_pois')
+def get_pois():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    text_query = "зоотовары | ветеринарные услуги | площадка для собак"
+
+    encoded_query = urllib.parse.quote(text_query)
+    search_api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+    url = f"https://search-maps.yandex.ru/v1/?text={encoded_query}&ll={lon},{lat}&spn=0.2,0.2&lang=ru_RU&apikey={search_api_key}&results=100"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        results = []
+
+        if 'features' in data:
+            for feat in data['features']:
+                meta = feat.get('properties', {}).get('CompanyMetaData', {})
+                cats = [c['name'] for c in meta.get('Categories', [])]
+
+                results.append({
+                    'lat': feat['geometry']['coordinates'][1],
+                    'lon': feat['geometry']['coordinates'][0],
+                    'name': meta.get('name', 'Без названия'),
+                    'category': cats[0] if cats else 'Зоо'
+                })
+
+        print(f"Поиск в центре: {lat}, {lon}. Найдено объектов: {len(results)}")
+        return jsonify(results)
+    except Exception as e:
+        return jsonify([])
 if __name__ == '__main__':
     main()

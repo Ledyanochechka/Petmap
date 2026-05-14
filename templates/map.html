@@ -385,7 +385,14 @@
         </div>
 
         <a class="profile-link" href="/profile" title="Перейти в профиль">
-            <div class="avatar">👤</div>
+            <div class="avatar" style="overflow: hidden;">
+                {% if person.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + person.avatar) }}"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    👤
+                {% endif %}
+            </div>
             <div class="profile-text">
                 <span>Профиль</span>
             </div>
@@ -416,7 +423,7 @@
 
                     <div class="control">
                         <span>Точки интереса</span>
-                        <div class="toggle" aria-hidden="true"></div>
+                        <div class="toggle" id="poi-toggle" aria-hidden="true"></div>
                     </div>
                 </div>
             </div>
@@ -457,6 +464,8 @@
     const extraMarks = [];
     let favoriteGroup = null;
     let favToggle = null;
+    let poiGroup = null;
+    let poiToggle = null;
 
     ymaps.ready(init);
 
@@ -536,24 +545,138 @@
             }
         });
 
+        poiGroup = new ymaps.GeoObjectCollection();
+        poiToggle = document.getElementById("poi-toggle");
+
+        poiToggle.parentElement.addEventListener("click", async function () {
+            console.log("Кнопка нажата!");
+            poiToggle.classList.toggle("active");
+
+            if (poiToggle.classList.contains("active")) {
+                const center = myMap.getCenter();
+                try {
+                    const response = await fetch(`/api/get_pois?lat=${center[0]}&lon=${center[1]}`);
+                    const locations = await response.json();
+
+                    console.log("Места от сервера:", locations);
+
+                    poiGroup.removeAll(); // Очищистка
+
+                    locations.forEach(loc => {
+                        const safeName = escapeHtml(loc.name);
+                        const encodedName = encodeURIComponent(loc.name);
+                        const poiBalloonHTML = `
+                            <div style="font-size: 14px; padding: 5px; color: #1f2937; min-width: 150px;">
+                                <b style="display: block; margin-bottom: 4px;">${safeName}</b>
+                                <div style="color: #6b7280; font-size: 12px; margin-bottom: 8px;">${escapeHtml(loc.category)}</div>
+                                <label style="cursor:pointer; display:flex; align-items:center; gap:8px; background: #f3f4f6; padding: 6px; border-radius: 6px;">
+                                    <input type="checkbox"
+                                        id="fav-checkbox-${normalizeCoord(loc.lat)}-${normalizeCoord(loc.lon)}"
+                                        class="poi-fav-checkbox"
+                                        data-lat="${normalizeCoord(loc.lat)}"
+                                        data-lon="${normalizeCoord(loc.lon)}"
+                                        data-name="${encodedName}"
+                                        onclick="toggleFavorite(this)">
+                                    <span>В избранное</span>
+                                </label>
+                            </div>
+                        `;
+
+                        const mark = new ymaps.Placemark([loc.lat, loc.lon], {
+                            balloonContent: poiBalloonHTML,
+                            iconCaption: loc.name
+                        }, {
+                            preset: 'islands#violetDotIconWithCaption',
+                            iconColor: '#8a2be2'
+                        });
+
+                        mark.events.add("balloonopen", function () {
+                            updateBalloonFavoriteState([loc.lat, loc.lon]);
+                        });
+
+                        poiGroup.add(mark);
+                    });
+
+                    myMap.geoObjects.add(poiGroup);
+
+                } catch (err) {
+                    console.error("Ошибка при получении POI:", err);
+                }
+            } else {
+                myMap.geoObjects.remove(poiGroup);
+                poiGroup.removeAll();
+            }
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
+
+        const addressParam = urlParams.get("address");
+        if (urlParams.get("mode") === "show_home" && addressParam) {
+            ymaps.geocode(decodeURIComponent(addressParam)).then(function (res) {
+                const firstGeoObject = res.geoObjects.get(0);
+                const coords = firstGeoObject.geometry.getCoordinates();
+
+                myMap.setCenter(coords, 16, { duration: 1000 });
+                const homeMarker = new ymaps.Placemark(coords, {
+                    balloonContent: "Мой дом",
+                    iconCaption: "Дом"
+                }, {
+                    preset: "islands#blueHomeIcon"
+                });
+                myMap.geoObjects.add(homeMarker);
+                homeMarker.balloon.open();
+            });
+        }
+
         const latParam = urlParams.get("lat");
         const lonParam = urlParams.get("lon");
+        const nameParam = urlParams.get("name");
+
+        if (urlParams.get("mode") === "set_home") {
+            alert("Кликните на карту в нужном месте, чтобы установить свой адрес");
+
+            myMap.events.add('click', function (e) {
+                const coords = e.get('coords');
+
+                ymaps.geocode(coords).then(function (res) {
+                    const firstGeoObject = res.geoObjects.get(0);
+                    const address = firstGeoObject.getAddressLine();
+
+                    if (confirm(`Установить этот адрес в профиле?\n${address}`)) {
+                        fetch('/api/save_user_address', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address: address })
+                        }).then(response => {
+                            if (response.ok) {
+                                window.location.href = '/profile';
+                            } else {
+                                alert("Ошибка при сохранении адреса");
+                            }
+                        });
+                    }
+                });
+            });
+        }
 
         if (latParam && lonParam) {
             const targetCoords = [parseFloat(latParam), parseFloat(lonParam)];
             myMap.setCenter(targetCoords, 16, { duration: 1000 });
+            const displayTitle = nameParam ? decodeURIComponent(nameParam) : "Выбранное место";
 
             searchMarker = new ymaps.Placemark(targetCoords, {
-                balloonContent: "Выбранное место",
-                markerTitle: "Выбранное место"
+                balloonContent: `<strong>${displayTitle}</strong>`,
+                iconCaption: displayTitle
             }, {
                 preset: "islands#redDotIconWithCaption",
                 iconColor: "#ff0000"
             });
 
             myMap.geoObjects.add(searchMarker);
-            searchMarker.balloon.open();
+
+            setTimeout(() => {
+                searchMarker.balloon.open();
+            }, 1000);
         }
     }
 
@@ -603,13 +726,12 @@
     async function updateBalloonFavoriteState(coords) {
         const lat = normalizeCoord(coords[0]);
         const lon = normalizeCoord(coords[1]);
-
         const response = await fetch(`/api/toggle_favorite?lat=${lat}&lon=${lon}`);
         const data = await response.json();
-
-        const checkbox = document.getElementById("fav-checkbox");
+        const checkbox = document.querySelector(`input[data-lat="${lat}"][data-lon="${lon}"]`);
         if (checkbox) {
             checkbox.checked = data.is_fav;
+            console.log(`Статус для точки ${lat}, ${lon} обновлен: ${data.is_fav}`);
         }
     }
 
@@ -715,50 +837,55 @@
     }
 
     function saveAllMarkersToFavorites() {
-    const markers = [];
+        const markers = [];
+        if (currentPlacemark) {
+            const coords = currentPlacemark.geometry.getCoordinates();
+            markers.push({
+                lat: normalizeCoord(coords[0]),
+                lon: normalizeCoord(coords[1]),
+                name: currentPlacemark.properties.get('markerTitle') || "Найденное место"
+            });
+        }
 
-    if (currentPlacemark) {
-        const coords = currentPlacemark.geometry.getCoordinates();
-        markers.push({
-            lat: coords[0],
-            lon: coords[1],
-            name: "Найденное место"
+        if (searchMarker) {
+            const coords = searchMarker.geometry.getCoordinates();
+            markers.push({
+                lat: normalizeCoord(coords[0]),
+                lon: normalizeCoord(coords[1]),
+                name: searchMarker.properties.get('iconCaption') || "Выбранное место"
+            });
+        }
+        extraMarks.forEach(mark => {
+            const coords = mark.geometry.getCoordinates();
+            markers.push({
+                lat: normalizeCoord(coords[0]),
+                lon: normalizeCoord(coords[1]),
+                name: mark.properties.get('markerTitle') || "Метка в центре карты"
+            });
+        });
+
+        if (markers.length === 0) {
+            alert("На карте нет меток для добавления в избранное");
+            return;
+        }
+
+        fetch('/api/save_favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ markers: markers })
+        })
+        .then(r => r.json())
+        .then(data => {
+            alert(`Успешно сохранено меток: ${data.added_count}`);
+            if (favToggle && favToggle.classList.contains("active")) {
+                loadFavorites();
+            }
+        })
+        .catch(err => {
+            console.error("Ошибка сохранения:", err);
+            alert("Не удалось сохранить метки");
         });
     }
-
-    if (searchMarker) {
-        const coords = searchMarker.geometry.getCoordinates();
-        markers.push({
-            lat: coords[0],
-            lon: coords[1],
-            name: "Выбранное место"
-        });
-    }
-
-    extraMarks.forEach(mark => {
-        const coords = mark.geometry.getCoordinates();
-        markers.push({
-            lat: coords[0],
-            lon: coords[1],
-            name: "Метка в центре карты"
-        });
-    });
-
-    if (!markers.length) {
-        alert("Нет меток для сохранения");
-        return;
-    }
-
-    fetch('/api/save_favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markers: markers })
-    })
-    .then(r => r.json())
-    .then(data => {
-        alert(`Сохранено меток: ${data.added_count}`);
-    });
-}
 
     async function toggleFavorite(checkbox) {
         const data = {
@@ -780,7 +907,7 @@
             return;
         }
 
-        if (favToggle.classList.contains("active")) {
+        if (favToggle && favToggle.classList.contains("active")) {
             await loadFavorites();
         }
     }

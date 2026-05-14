@@ -296,16 +296,41 @@
 
     <div class="top">
         <div class="user">
-            <div class="avatar" title="Иконка профиля">👤</div>
-            <div class="user-info">
-                <p class="username">{{ person.name }}</p>
-                <p class="status">Город: неизвестно</p>
+            <div class="avatar" id="avatar-container" title="Нажмите, чтобы изменить фото" style="cursor: pointer; overflow: hidden; position: relative;">
+                {% if person.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + person.avatar) }}" id="avatar-img" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                    <span id="avatar-placeholder">👤</span>
+                {% endif %}
+                <input type="file" id="avatar-input" style="display: none;" accept="image/*">
+            </div>
+            <div class="user-info" style="display: flex; align-items: center; gap: 25px;">
+                <div>
+                    <p class="username" style="margin: 0;">{{ person.name }}</p>
+                    <p class="status" style="margin: 0;">Город: {{ user_city }}</p>
+                </div>
+
+                <div style="border: 2px solid #4e73df; border-radius: 10px; padding: 10px; display: flex; align-items: center; gap: 15px; min-width: 350px; background: white; margin-right: 70px;">
+                    <div style="flex-grow: 1;">
+                        <div style="color: #4e73df; font-weight: bold; font-size: 14px;">Адрес</div>
+                        <div style="font-size: 14px; color: #1f2937;">
+                            {% if person.address %}
+                                {{ person.address }}
+                            {% else %}
+                                Статус: не указан
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <a href="#" onclick="showHomeOnMap(event)" class="btn" style="padding: 2px 8px; font-size: 11px;">Показать на карте</a>
+                        <a href="/map?mode=set_home" class="btn" style="padding: 2px 8px; font-size: 11px; background-color: #4e73df; color: white; border: none;">Изменить</a>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="actions">
-            <a class="btn btn-primary" href="/map">На
-                карту</a>
+            <a class="btn btn-primary" href="/map">На карту</a>
             <a class="btn" href="/edit_prof">Настройки</a>
         </div>
     </div>
@@ -361,9 +386,9 @@
                                 <p class="place-meta">{{ place.address }}</p>
 
                                 <div class="mini-actions" style="margin-top: 8px;">
-                                    <a href="/map?lat={{ place.coordinates.split(',')[0].strip() }}&lon={{ place.coordinates.split(',')[1].strip() }}"
-                                       class="mini-link" style="color: #1cc88a;">
-                                        📍 Показать на карте
+                                    <a href="/map?lat={{ place.coordinates.split(',')[0].strip() }}&lon={{ place.coordinates.split(',')[1].strip() }}&name={{ place.name }}"
+                                        class="mini-link" style="color: #1cc88a;">
+                                            📍 Показать на карте
                                     </a>
 
                                     <form action="/remove_favorite/{{ place.id }}" method="post" style="display:inline;">
@@ -386,5 +411,57 @@
 
 </div>
 </div>
+<script>
+function showHomeOnMap(event) {
+    event.preventDefault();
+    const address = "{{ person.address }}";
+    if (!address || address === "None" || address === "" || address === "не указан") {
+        alert("Адрес еще не указан. Сначала нажмите кнопку 'Изменить', чтобы выбрать его на карте.");
+    } else {
+        const encodedAddress = encodeURIComponent(address);
+        window.location.href = `/map?address=${encodedAddress}&mode=show_home`;
+    }
+}
+</script>
+
+<script>
+document.getElementById('avatar-container').addEventListener('click', () => {
+    document.getElementById('avatar-input').click();
+});
+
+document.getElementById('avatar-input').addEventListener('change', async function() {
+    if (this.files && this.files[0]) {
+        const formData = new FormData();
+        formData.append('avatar', this.files[0]);
+
+        try {
+            const response = await fetch('/api/upload_avatar', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.status === 'ok') {
+                const container = document.getElementById('avatar-container');
+                let img = document.getElementById('avatar-img');
+
+                if (!img) {
+                    document.getElementById('avatar-placeholder').remove();
+                    img = document.createElement('img');
+                    img.id = 'avatar-img';
+                    img.style.cssText = "width: 100%; height: 100%; object-fit: cover;";
+                    container.appendChild(img);
+                }
+                img.src = result.url;
+            } else {
+                alert("Ошибка при загрузке фото");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось связаться с сервером");
+        }
+    }
+});
+</script>
 </body>
 </html>
