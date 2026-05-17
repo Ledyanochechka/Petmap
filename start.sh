@@ -1,5 +1,5 @@
 #!/bin/bash
-cd https://sourcecraft.dev/medinskiy-yandexlyceum-ru/ffllaapp
+cd ffllaapp
 export PORT=5000
 unset PIP_USER
 
